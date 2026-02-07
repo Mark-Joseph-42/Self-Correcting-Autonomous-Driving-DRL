@@ -1,0 +1,13 @@
+
+=========================================
+STAGE 2 COMPLETION SNAPSHOT
+Timestamp: 2026-02-07 14:28:09
+=========================================
+Total Reward Scored: 219.21
+Distance Progress:   0.0
+Speed Reward:        219.2
+Alignment Reward:    0.0
+Safety Penalties:    0.0
+-----------------------------------------
+FINAL SUCCESS RATE:  0.0%
+=========================================

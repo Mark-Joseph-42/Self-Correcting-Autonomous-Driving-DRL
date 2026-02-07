@@ -1,24 +1,44 @@
-from environment import make_env
-from stable_baselines3.common.utils import set_random_seed
-from stable_baselines3.common.env_checker import check_env
-import shimmy
+import os
+import numpy as np
 
-try:
-    print("Creating environment...")
-    env = make_env(render=False, map_type="S")
+def verify():
+    print("--- CARLA Environment Verification ---")
     
-    # Check if we need to wrap it
-    # SB3 check_env 
-    print("Checking environment with SB3...")
-    # We might need to wrap it if it is a legacy gym env
-    # MetaDrive is legacy gym (0.21 usually)
+    # Force CARLA backend
+    os.environ["USE_CARLA"] = "1"
     
-    # Try checking directly
-    # formatting output to ensure we see errors
-    check_env(env)
-    print("Environment is compatible!")
-except Exception as e:
-    print(f"Environment check failed: {e}")
-    # Suggest wrapper
-    import gymnasium
-    print("Attempting to wrap with GymV21CompatibilityV0...")
+    try:
+        from carla_env import make_carla_env
+        from curriculum_manager import get_carla_curriculum_config
+        
+        stages = get_carla_curriculum_config()
+        stage1 = stages[0]
+        
+        print(f"Creating env for {stage1['name']}...")
+        env = make_carla_env(stage1)
+        
+        print("Resetting environment...")
+        obs, info = env.reset()
+        
+        print(f"Observation Keys: {obs.keys()}")
+        if "semantic_segmentation" in obs:
+            shape = obs["semantic_segmentation"].shape
+            print(f"Semantic Segmentation Shape: {shape}")
+            if shape == (64, 64, 1):
+                print("✅ Observation space matches requirements.")
+        
+        print("Stepping...")
+        # Action: [steer, throttle/brake]
+        action = np.array([0.0, 0.5]) 
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(f"Step successful. Reward: {reward}")
+        
+        env.close()
+        print("✅ Verification Complete: CARLA integration is working.")
+        
+    except Exception as e:
+        print(f"❌ Verification Failed: {e}")
+        print("Ensure CARLA server is running (use ./launch_carla.sh)")
+
+if __name__ == "__main__":
+    verify()

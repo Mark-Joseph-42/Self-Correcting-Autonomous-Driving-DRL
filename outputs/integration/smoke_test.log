@@ -1,0 +1,5 @@
+--- CARLA 0.9.13 Integration Smoke Test ---
+Timestamp: Sat Feb  7 12:47:55 2026
+
+
+❌ Smoke Test FAILED: time-out of 40000ms while waiting for the simulator, make sure the simulator is ready and connected to 127.0.0.1:2000

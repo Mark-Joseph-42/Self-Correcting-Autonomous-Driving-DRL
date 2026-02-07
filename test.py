@@ -1,63 +1,65 @@
 import os
+import numpy as np
+import torch
 from agent_logic import load_agent
-from env_wrapper import make_env
 
 def test():
     """
-    Visual inference script using the modular codebase.
+    Inference script for CARLA 0.9.13.
     """
-    # Priority: Latest interrupted model -> stage2 final -> final model
-    potential_models = [
-        "models/interrupted_model.zip",
-        "models/stage2_final.zip",
-        "models/final_model.zip",
-        "models/stage1_final.zip"
-    ]
+    os.environ["USE_CARLA"] = "1"
     
-    model_path = None
-    for path in potential_models:
-        if os.path.exists(path):
-            model_path = path
-            break
-
+    # Priority: Environment variable then search
+    model_path = os.environ.get("TEST_MODEL_PATH")
+    
     if not model_path:
-        print("❌ No trained model found in ./models/. Please run train.py first.")
-        return
-
-    print(f"📡 Loading modular agent from {model_path}...")
-    try:
-        model = load_agent(model_path)
-    except Exception as e:
-        print(f"❌ Failed to load model: {e}")
-        return
-    
-    print("🌍 Creating environment (Map: SCX)...")
-    env = make_env(render=True, map_type="SCX")
-    
-    print("▶️ Starting simulation. Press Ctrl+C to stop.")
-    obs, info = env.reset()
-    
-    try:
-        while True:
-            try:
-                action, _states = model.predict(obs, deterministic=True)
-            except ValueError as e:
-                print("\n❌ SENSOR MISMATCH ERROR:")
-                print(f"Details: {e}")
-                print("\n💡 POSSIBLE FIXES:")
-                print("1. You are trying to load an OLD model (trained with LiDAR) into the NEW vision-only environment.")
-                print("2. Delete your old models: 'rm models/*.zip'")
-                print("3. Re-run training: './driving_env/bin/python3 train.py'")
+        potential_models = [
+            "outputs/stage_5/ppo_agent_stage_5.zip",
+            "outputs/stage_1/ppo_agent_stage_1.zip",
+            "models/final_model_carla.zip"
+        ]
+        for path in potential_models:
+            if os.path.exists(path):
+                model_path = path
                 break
 
-            obs, reward, terminated, truncated, info = env.step(action)
-            env.render() 
-            
-            if terminated or truncated:
-                print("🔄 Episode finished. Resetting.")
-                obs, info = env.reset()
+    if not model_path:
+        print("❌ No model found! Searching outputs...")
+        import glob
+        zips = glob.glob("outputs/**/*.zip", recursive=True)
+        if zips:
+            model_path = max(zips, key=os.path.getmtime)
+            print(f"Using found model: {model_path}")
+        else:
+            print("❌ No trained CARLA model found.")
+            return
+
+    print(f"📡 Loading agent from {model_path}...")
+    try:
+        from carla_env import make_carla_env
+        from curriculum_manager import get_carla_curriculum_config
+        
+        stages = get_carla_curriculum_config()
+        env = make_carla_env(stages[0])
+        model = load_agent(model_path, env=env)
+    except Exception as e:
+        print(f"❌ Load failed: {e}")
+        print("Note: If you see pickle protocol errors, it means the model was saved with a newer Python version.")
+        return
+    
+    print("▶️ Starting inference...")
+    obs = env.reset()
+    try:
+        for i in range(500):
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, done, info = env.step(action)
+            if done:
+                print("🔄 Collision! Resetting.")
+                obs = env.reset()
+            if i % 100 == 0:
+                print(f"  Step {i}...")
     except KeyboardInterrupt:
-        print("\n🛑 Stopping test.")
+        pass
     finally:
         env.close()
 
