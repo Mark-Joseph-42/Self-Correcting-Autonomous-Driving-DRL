@@ -3,63 +3,88 @@ import numpy as np
 import torch
 from agent_logic import load_agent
 
+import argparse
+import gym
+from stable_baselines3 import PPO
+
 def test():
     """
     Inference script for CARLA 0.9.13.
     """
+    parser = argparse.ArgumentParser(description="Run inference with a trained agent.")
+    parser.add_argument("--model", type=str, help="Path to the .zip model file")
+    parser.add_argument("--stage", type=int, default=1, help="Curriculum stage to simulate (1-5)")
+    args = parser.parse_args()
+
     os.environ["USE_CARLA"] = "1"
     
-    # Priority: Environment variable then search
-    model_path = os.environ.get("TEST_MODEL_PATH")
+    # Priority: Arg > Env Var > Default Search
+    model_path = args.model or os.environ.get("TEST_MODEL_PATH")
     
     if not model_path:
-        potential_models = [
-            "outputs/stage_5/ppo_agent_stage_5.zip",
-            "outputs/stage_1/ppo_agent_stage_1.zip",
-            "models/final_model_carla.zip"
-        ]
-        for path in potential_models:
-            if os.path.exists(path):
-                model_path = path
-                break
-
-    if not model_path:
-        print("❌ No model found! Searching outputs...")
-        import glob
-        zips = glob.glob("outputs/**/*.zip", recursive=True)
-        if zips:
-            model_path = max(zips, key=os.path.getmtime)
-            print(f"Using found model: {model_path}")
+        # Search defaults based on stage
+        default_path = f"outputs/stage_{args.stage}/final_model_stage_{args.stage}.zip"
+        if os.path.exists(default_path):
+            model_path = default_path
         else:
-            print("❌ No trained CARLA model found.")
-            return
+            # Fallback search
+            print(f"⚠️  {default_path} not found. Searching generally...")
+            import glob
+            zips = glob.glob("outputs/**/*.zip", recursive=True)
+            if zips:
+                model_path = max(zips, key=os.path.getmtime)
+            else:
+                print("❌ No trained CARLA model found.")
+                return
 
     print(f"📡 Loading agent from {model_path}...")
+    
+    if not os.path.exists(model_path):
+         print(f"❌ Error: Model file '{model_path}' does not exist.")
+         return
+
     try:
         from carla_env import make_carla_env
         from curriculum_manager import get_carla_curriculum_config
         
         stages = get_carla_curriculum_config()
-        env = make_carla_env(stages[0])
-        model = load_agent(model_path, env=env)
+        # Stage is 1-indexed in args, 0-indexed in list
+        stage_config = stages[args.stage - 1]
+        
+        print(f"🌍 Loading Environment for Stage {args.stage}: {stage_config['name']} (Map: {stage_config['map']})")
+        
+        env = make_carla_env(stage_config)
+        
+        # Load agent
+        # We need to manually load because we might have different internal structures
+        # handled by SB3's load
+        model = PPO.load(model_path, env=env)
+        
     except Exception as e:
         print(f"❌ Load failed: {e}")
-        print("Note: If you see pickle protocol errors, it means the model was saved with a newer Python version.")
+        import traceback
+        traceback.print_exc()
         return
     
-    print("▶️ Starting inference...")
+    print("▶️ Starting inference (Press Ctrl+C to stop)...")
     obs = env.reset()
+    total_reward = 0
     try:
-        for i in range(500):
-            action, _ = model.predict(obs, deterministic=True)
+        for i in range(1000):
+            action, _state = model.predict(obs, deterministic=True)
             obs, reward, done, info = env.step(action)
+            total_reward += reward
+            
             if done:
-                print("🔄 Collision! Resetting.")
+                print(f"🔄 Episode Finished. Total Reward: {total_reward:.2f}")
+                total_reward = 0
                 obs = env.reset()
-            if i % 100 == 0:
-                print(f"  Step {i}...")
+                
+            if i % 50 == 0:
+                print(f"  Step {i} | Speed: {info.get('speed', 0):.1f} km/h | Light: {info.get('light_state', 'Unknown')}")
+                
     except KeyboardInterrupt:
-        pass
+        print("\n🛑 Test Validation Stopped by User.")
     finally:
         env.close()
 

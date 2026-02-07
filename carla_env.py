@@ -219,7 +219,8 @@ class CarlaEnv(gym.Env):
         control = carla.VehicleControl()
         control.steer = steer
         if throttle_brake >= 0:
-            control.throttle = throttle_brake
+            # Throttle Boost: Map [0, 1] -> [0.3, 1.0] to overcome static friction
+            control.throttle = 0.3 + (0.7 * throttle_brake)
             control.brake = 0.0
         else:
             control.throttle = 0.0
@@ -251,7 +252,7 @@ class CarlaEnv(gym.Env):
         obs_bp = self.blueprint_library.find('sensor.other.obstacle')
         obs_bp.set_attribute('distance', '50')
         obs_bp.set_attribute('hit_radius', '0.5')
-        obs_bp.set_attribute('only_dynamics', 'True')
+        # obs_bp.set_attribute('only_dynamics', 'True') # Disabled to see walls/poles
         
         obs_transform = carla.Transform(carla.Location(x=1.6, z=1.0))
         self.seg_sensor = self.world.spawn_actor(
@@ -264,10 +265,6 @@ class CarlaEnv(gym.Env):
         self.sensors.append(self.seg_sensor)
         print(f"📡 Obstacle Sensor Attached with ID: {self.seg_sensor.id}")
         
-    def _on_obstacle(self, event):
-        if event.actor.id == self.vehicle.id: return # Ignore self
-        self.obstacle_dist = min(self.obstacle_dist, event.distance)
-        
         # Collision sensor
         col_bp = self.blueprint_library.find('sensor.other.collision')
         self.col_sensor = self.world.spawn_actor(
@@ -278,6 +275,41 @@ class CarlaEnv(gym.Env):
         )
         self.col_sensor.listen(lambda event: self.collision_hist.append(event))
         self.sensors.append(self.col_sensor)
+        
+        # RGB Camera (Visualization Only - Not used by agent)
+        if self.show_display:
+            cam_bp = self.blueprint_library.find('sensor.camera.rgb')
+            cam_bp.set_attribute('image_size_x', '400')
+            cam_bp.set_attribute('image_size_y', '300')
+            cam_bp.set_attribute('fov', '90')
+            cam_transform = carla.Transform(carla.Location(x=-5.5, z=2.5), carla.Rotation(pitch=-15))
+            
+            self.rgb_sensor = self.world.spawn_actor(
+                cam_bp,
+                cam_transform,
+                attach_to=self.vehicle,
+                attachment_type=carla.AttachmentType.Rigid
+            )
+            self.rgb_sensor.listen(self._process_rgb_img)
+            self.sensors.append(self.rgb_sensor)
+            print(f"📷 Visualization RGB Camera Attached ID: {self.rgb_sensor.id}")
+            
+    def _process_rgb_img(self, image):
+        """Standard Async Callback for RGB Camera"""
+        if not self.show_display: return
+        # Debug Print (Throttle to avoid spam)
+        if self.step_count % 100 == 0:
+             print(f"📸 RGB Camera Callback! Frame: {image.frame} | Bytes: {len(image.raw_data)}")
+        
+        i = np.array(image.raw_data)
+        # Reshape based on the dimensions set in _setup_sensors (400x300)
+        i2 = i.reshape((300, 400, 4))
+        self.latest_image = i2[:, :, :3] # BGRA -> BGR
+        
+    def _on_obstacle(self, event):
+        if self.vehicle is None or not self.vehicle.is_alive: return 
+        if event.actor.id == self.vehicle.id: return # Ignore self
+        self.obstacle_dist = min(self.obstacle_dist, event.distance)
 
     def _get_obs(self, sensor_data=None):
         # 44-DIMENSIONAL VECTOR OBSERVATION
@@ -287,6 +319,7 @@ class CarlaEnv(gym.Env):
         # [12-43]: LIDAR 32-Sector Distances
         
         obs = np.zeros(44, dtype=np.float32)
+        # Image is updated asynchronously via _process_rgb_img
         
         # 1. Navigation State
         if self.vehicle:
@@ -331,7 +364,11 @@ class CarlaEnv(gym.Env):
         v = self.vehicle.get_velocity()
         speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2) 
         r_speed = 1.0 - (abs(speed - 30.0) / 30.0)
-        r += max(-1.0, min(1.0, r_speed))
+        
+        # 2. Dense Speed Reward (Incentivize ANY movement)
+        r_dense = speed / 100.0
+        
+        r += max(-1.0, min(1.0, r_speed)) + r_dense
         info["reward_speed"] = float(np.nan_to_num(r_speed))
         info["reward_route"] = 0.0 
         r = float(np.nan_to_num(r))
@@ -344,6 +381,16 @@ class CarlaEnv(gym.Env):
             if speed > 1.0: # Running global red light logic
                 r -= 2.0
                 info["penalty_red_light"] = -2.0
+                
+        # Stationary Penalty (Critical Fix: Prevent idle camping)
+        if speed < 1.0:
+            r -= 0.1
+            info["penalty_stationary"] = -0.1
+            
+        # Collision Penalty (The "Ouch" Signal)
+        if len(self.collision_hist) > 0:
+            r -= 50.0
+            info["penalty_collision"] = -50.0
         
         # New: Log if reward is calculated
         if random.random() < 0.05: # Sample log (Increased freq for visibility)
@@ -353,6 +400,16 @@ class CarlaEnv(gym.Env):
 
     def _cleanup_actors(self):
         """Robust cleanup to prevent segfaults on map change"""
+        
+        # 0. FORCE ASYNC MODE (Critical due to Signal 11 crashes)
+        if self.world:
+             try:
+                 settings = self.world.get_settings()
+                 settings.synchronous_mode = False
+                 settings.fixed_delta_seconds = None
+                 self.world.apply_settings(settings)
+             except: pass
+
         if self.sync_manager:
             try:
                 self.sync_manager.cleanup()
@@ -364,6 +421,10 @@ class CarlaEnv(gym.Env):
             if s and s.is_alive:
                 try: s.stop()
                 except: pass
+        
+        # Allow callbacks to finish (Critical for Segfault prevention)
+        if self.sensors:
+            time.sleep(0.2)
                 
         # 2. Batch Destroy
         batch = []
@@ -393,45 +454,36 @@ class CarlaEnv(gym.Env):
 
     def _visualize(self, obs):
         """Shows the sensor data in a small OpenCV window"""
-        if cv2 is None: return
+        if cv2 is None or not self.show_display: return
         
         # 0. Initialize window if needed
         window_name = "AGENT_PERCEPTION_FEED"
         
-        if "semantic_segmentation" not in obs:
-            if self.step_count % 100 == 0:
-               print(f"📡 Vector Observation: {obs[:5]}...", flush=True)
-            return
-            
-        # 1. Perception View (Semantic)
-        seg = obs["semantic_segmentation"]  # (H, W, 1)
+        # Vector Observation Visualization
+        # Use RGB Camera image if available, else black canvas
+        if hasattr(self, 'latest_image') and self.latest_image is not None:
+            canvas = np.ascontiguousarray(self.latest_image)
+        else:
+            canvas = np.zeros((300, 400, 3), dtype=np.uint8)
         
-        # Apply CityScapes-like Palette for better detail
-        # 0=Unlabeled, 1=Building, 2=Fence, 3=Other, 4=Pedestrian, 5=Pole, 6=RoadLine, 7=Road, 8=Sidewalk, 9=Vegetation, 10=Vehicles, 12=TrafficSign, 18=TrafficLight
-        # We'll map these to BGR colors
-        color_map = np.zeros((256, 1, 3), dtype=np.uint8)
-        color_map[7] = [128, 64, 128]   # Road (Purple)
-        color_map[6] = [244, 35, 232]   # RoadLine (Pink)
-        color_map[10] = [142, 0, 0]     # Vehicles (Dark Blue)
-        color_map[4] = [220, 20, 60]    # Pedestrian (Red)
-        color_map[12] = [220, 220, 0]   # TrafficSign (Yellow)
-        color_map[18] = [250, 170, 30]  # TrafficLight (Orange)
-        color_map[9] = [107, 142, 35]   # Vegetation (Green)
-        
-        # Apply custom colormap
-        seg_color = cv2.applyColorMap(seg, color_map)
-        
-        # Resize for display
-        seg_large = cv2.resize(seg_color, (512, 512), interpolation=cv2.INTER_NEAREST)
-        
-        # 2. Add Info Overlay
         v = self.vehicle.get_velocity()
         speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2)
-        cv2.putText(seg_large, f"SPEED: {speed:.1f} KM/H", (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2)
-        cv2.putText(seg_large, "SEMANTIC: 128x128 (Road=Purple, Car=Blue, Sign=Yel)", (10, 480), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         
-        # 3. Show Window
-        cv2.imshow(window_name, seg_large)
+        # Traffic Light
+        tl_state = "Green"
+        if obs[10] < 0.2: tl_state = "Red"
+        elif obs[10] < 0.8: tl_state = "Yellow"
+        
+        cv2.putText(canvas, f"SPEED: {speed:.1f} KM/H", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        cv2.putText(canvas, f"LIGHT: {tl_state}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
+        cv2.putText(canvas, f"STEER: {obs[1]:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        cv2.putText(canvas, f"THROTTLE: {obs[2]:.2f}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        
+        # Obstacle
+        min_obs_dist = np.min(obs[12:]) * 50.0
+        cv2.putText(canvas, f"NEAREST OBS: {min_obs_dist:.1f}m", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 1)
+
+        cv2.imshow(window_name, canvas)
         cv2.waitKey(1)
 
     def close(self):

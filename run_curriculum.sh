@@ -6,8 +6,9 @@ eval "$(conda shell.bash hook)"
 conda activate carla_py37
 export USE_CARLA=1
 
-# Execute Stages (Support resuming, e.g. ./run_curriculum.sh 3)
+# Execute Stages (Support resuming, e.g. ./run_curriculum.sh 3 5)
 START_STAGE=${1:-1}
+END_STAGE=${2:-5}
 
 # 0. Cleanup Stale Models (Crucial for Architecture Changes) - ONLY IF STARTING FRESH
 if [ "$START_STAGE" -eq 1 ]; then
@@ -61,10 +62,9 @@ run_stage() {
 # Execute Stages (Support resuming, e.g. ./run_curriculum.sh 3)
 
 
-for i in {1..5}; do
-    if [ $i -ge $START_STAGE ]; then
-        run_stage $i
-    fi
+
+for i in $(seq $START_STAGE $END_STAGE); do
+    run_stage $i
 done
 
 echo "🏁 Full Curriculum Complete!"

@@ -99,13 +99,39 @@ def train_headless():
             transparency_callback = TransparencyCallback()
             
             # Train
+            # Train loop with TQDM for stability (avoids Rich/sys.meta_path crash)
+            from tqdm import tqdm
             print(f"Training Stage {args.stage} (Goal: {stage['threshold']} reward)...")
-            model.learn(
-                total_timesteps=stage['timesteps'], 
-                callback=[checkpoint_callback, stop_callback, transparency_callback], 
-                progress_bar=True,
-                reset_num_timesteps=False
-            )
+            
+            pbar = tqdm(total=stage['timesteps'], file=sys.stdout, dynamic_ncols=True)
+            current_steps = 0
+            
+            try:
+                while current_steps < stage['timesteps']:
+                     # Train in small chunks
+                     chunk_size = 2048
+                     model.learn(
+                        total_timesteps=chunk_size, 
+                        callback=[checkpoint_callback, stop_callback, transparency_callback], 
+                        progress_bar=False, 
+                        reset_num_timesteps=False
+                     )
+                     current_steps += chunk_size
+                     pbar.update(chunk_size)
+                     
+                     # Check for stage completion (via callback)
+                     # Handle both VecEnv and raw Env
+                     is_complete = False
+                     if hasattr(env, "get_attr"):
+                         is_complete = env.get_attr("_stage_complete")[0]
+                     elif hasattr(env, "unwrapped") and hasattr(env.unwrapped, "_stage_complete"):
+                         is_complete = env.unwrapped._stage_complete
+                         
+                     if is_complete:
+                         print(f"✅ Stage {args.stage} graduation criteria met!", flush=True)
+                         break
+            finally:
+                pbar.close()
             
             # Save Telemetry
             save_telemetry_snapshot(args.stage, transparency_callback.stats, output_dir)
