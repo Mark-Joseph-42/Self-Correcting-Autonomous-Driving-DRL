@@ -35,8 +35,9 @@ run_stage() {
     
     # 3. Run Training Stage
     echo "🚀 Running Training Stage $STAGE..."
+    echo "🚀 Running Training Stage $STAGE..."
     # We use python -u for unbuffered output
-    python -u train_headless.py --stage $STAGE
+    python -u train.py --stage $STAGE
     
     EXIT_CODE=$?
     

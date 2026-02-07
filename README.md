@@ -137,6 +137,68 @@ All training artifacts are automatically saved to `./outputs/`:
 - `outputs/stage_X/tensorboard/`: Training metrics (Reward, Loss, FPS).
 - `outputs/transition_log.txt`: Records of curriculum graduation.
 
+
+---
+
+## ❓ Troubleshooting & Known Issues
+
+If you encounter issues, here are the meaningful ones (and the ones you can ignore):
+
+### 1. "Segmentation fault (Code 139)" at the end of a stage
+*   **Verdict**: **HARMLESS**.
+*   **Reason**: CARLA sometimes crashes when shutting down the OpenGL context.
+*   **Solution**: The `run_curriculum.sh` script automatically detects this. If `final_model_stage_X.zip` exists, it proceeds safely to the next stage.
+
+### 2. "RuntimeError: time-out of 40000ms"
+*   **Verdict**: **RESTART REQUIRED**.
+*   **Reason**: The Python script tried to connect before the CARLA server was ready.
+*   **Solution**: Kill all processes and try again.
+    ```bash
+    pkill -f CarlaUE4
+    pkill -f train.py
+    ./run_curriculum.sh
+    ```
+
+### 3. "libomp.so.5: cannot open shared object file"
+*   **Verdict**: **LIBRARY MISSING**.
+*   **Solution**:
+    ```bash
+    conda install -c conda-forge llvm-openmp -p ./carla_deps -y
+    ```
+    (The `launch_carla.sh` script automatically adds this local folder to `LD_LIBRARY_PATH`)
+
+---
+
+## ⚡ Quick Start (Fresh Install)
+
+To go from zero to driving in < 5 minutes:
+
+1.  **Clone & Enter**:
+    ```bash
+    git clone https://github.com/Mark-Joseph-42/Self-Correcting-Autonomous-Driving-DRL.git
+    cd Self-Correcting-Autonomous-Driving-DRL
+    ```
+
+2.  **Setup Environment**:
+    ```bash
+    conda create -n carla_py37 python=3.7 -y
+    conda activate carla_py37
+    pip install numpy==1.21.6 stable-baselines3==1.8.0 gym==0.21.0 opencv-python pillow torch
+    ```
+
+3.  **Run Training**:
+    ```bash
+    # This handles EVERYTHING (Server launch, training, restarts)
+    ./run_curriculum.sh
+    ```
+
+4.  **Watch it (Optional)**:
+    Open a new terminal:
+    ```bash
+    ./launch_carla_viz.sh
+    # (Then run test.py as described in Usage)
+    ```
+
 ---
 
 #### License
@@ -293,7 +355,7 @@ This script automatically:
 *(Legacy Method)*
 ```bash
 export USE_CARLA=1
-conda run -n carla_py37 --no-capture-output python train_headless.py
+conda run -n carla_py37 --no-capture-output python train.py
 ```
 
 ### Phase 3: Run Baseline Training (for Research Comparison)
