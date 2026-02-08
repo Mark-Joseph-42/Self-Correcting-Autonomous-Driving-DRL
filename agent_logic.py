@@ -15,10 +15,11 @@ def get_ppo_agent(env, device="cpu", tensorboard_log="./logs/training"):
         env, 
         policy_kwargs=policy_kwargs,
         verbose=1, 
-        learning_rate=5e-5, # Stable for demo
+        learning_rate=3e-4,  # Faster learning
         max_grad_norm=0.5,
-        n_steps=512, 
-        batch_size=64,
+        n_steps=2048,  # Larger rollout buffer (was 512)
+        batch_size=256,  # Larger batches (was 64)
+        n_epochs=10,  # More epochs per update (default)
         ent_coef=0.01,
         device=device,
         stats_window_size=1, 

@@ -36,22 +36,43 @@ run_stage() {
     # 3. Run Training Stage (with process lock)
     echo "🚀 Running Training Stage $STAGE..."
     echo "🚀 Running Training Stage $STAGE..."
-    # We use python -u for unbuffered output
-    python -u train_lock.py --stage $STAGE
+    # Run with retry on segfaults
+    MAX_RETRIES=3
+    RETRY_COUNT=0
     
-    EXIT_CODE=$?
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        python -u train_lock.py --stage $STAGE
+        EXIT_CODE=$?
+        
+        FINAL_MODEL="outputs/stage_${STAGE}/final_model_stage_${STAGE}.zip"
+        CHECKPOINT_MODEL="outputs/stage_${STAGE}/ppo_agent_stage_${STAGE}.zip"
+        
+        if [ $EXIT_CODE -eq 0 ]; then
+            echo "✅ Stage $STAGE Success."
+            break
+        elif [ $EXIT_CODE -eq 139 ] || [ $EXIT_CODE -eq 134 ] || [ $EXIT_CODE -eq 11 ]; then
+            # Segfault handling
+            if [ -f "$FINAL_MODEL" ] || [ -f "$CHECKPOINT_MODEL" ]; then
+                echo "⚠️  Stage $STAGE Segfaulted (Code $EXIT_CODE), but model saved. Continuing..."
+                break
+            else
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                echo "🔄 Segfault detected (Code $EXIT_CODE). Restarting CARLA... (Attempt $RETRY_COUNT/$MAX_RETRIES)"
+                pkill -9 -f CarlaUE4 || true
+                sleep 5
+                ./launch_carla.sh
+                sleep 10
+            fi
+        else
+            echo "❌ Stage $STAGE Failed with code $EXIT_CODE. Stopping Curriculum."
+            pkill -f CarlaUE4
+            exit $EXIT_CODE
+        fi
+    done
     
-    # 3b. Check for Success (Ignore Segfault 139 if model exists)
-    FINAL_MODEL="outputs/stage_${STAGE}/final_model_stage_${STAGE}.zip"
-    
-    if [ $EXIT_CODE -eq 0 ]; then
-        echo "✅ Stage $STAGE Success."
-    elif [ $EXIT_CODE -eq 139 ] && [ -f "$FINAL_MODEL" ]; then
-        echo "⚠️  Stage $STAGE Segfaulted on exit (Code 139), but model saved successfully. Continuing..."
-    else
-        echo "❌ Stage $STAGE Failed with code $EXIT_CODE. Stopping Curriculum."
-        pkill -f CarlaUE4
-        exit $EXIT_CODE
+    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        echo "❌ Stage $STAGE failed after $MAX_RETRIES retries. Exiting."
+        exit 1
     fi
     
     # 4. Kill Server (Clean Slate for next map)

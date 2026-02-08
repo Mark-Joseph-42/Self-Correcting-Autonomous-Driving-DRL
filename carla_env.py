@@ -115,6 +115,7 @@ class CarlaEnv(gym.Env):
         })
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.step_count = 0
+        self.prev_steer = 0.0
         
         # Display settings
         self.show_display = self.config.get("show_display", True)
@@ -428,6 +429,10 @@ class CarlaEnv(gym.Env):
         norm_dist = np.clip(self.obstacle_dist / 50.0, 0.0, 1.0)
         obs[12:] = norm_dist 
 
+        # 4. Speed Limit (NEW)
+        speed_limit = self.vehicle.get_speed_limit() if self.vehicle else 30.0
+        obs[9] = np.clip(speed_limit / 120.0, 0.0, 1.0)
+
         # Return as Dict
         semantic = getattr(self, "latest_semantic", np.zeros((1, 64, 64), dtype=np.uint8))
         
@@ -437,6 +442,11 @@ class CarlaEnv(gym.Env):
         return {"semantic": semantic_float, "vector": obs}
 
     def _compute_reward(self):
+        """
+        RESTORED ORIGINAL from 50% branch + gentle lane centering.
+        The original worked - agent drove at 30km/h.
+        Adding only ONE refinement: lane centering bonus.
+        """
         r = 0.0
         info = {}
         if self.vehicle is None:
@@ -445,18 +455,37 @@ class CarlaEnv(gym.Env):
         v = self.vehicle.get_velocity()
         speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2) 
         
-        # 1. Target Speed Reward (peak at 30 km/h)
+        # 1. Target Speed Reward (peak at 30 km/h) - ORIGINAL
         r_speed = 1.0 - (abs(speed - 30.0) / 30.0)
         
-        # 2. Dense Movement Reward (bonus for ANY forward motion)
+        # 2. Dense Movement Reward (bonus for ANY forward motion) - ORIGINAL
         r_movement = 0.02 * min(speed, 50.0)  # +1.0 at 50 km/h
         
         r += max(-1.0, min(1.0, r_speed)) + r_movement
         info["reward_speed"] = float(np.nan_to_num(r_speed))
         info["reward_movement"] = float(np.nan_to_num(r_movement))
+        
+        # 3. GENTLE Lane Centering (NEW - only when moving)
+        # This is the ONLY addition to the original
+        if speed > 10.0:  # Only apply when actually driving
+            waypoint = self.world.get_map().get_waypoint(self.vehicle.get_location(), project_to_road=True)
+            vehicle_loc = self.vehicle.get_location()
+            lane_center = waypoint.transform.location
+            lane_dir = waypoint.transform.get_forward_vector()
+            
+            to_vehicle = carla.Vector3D(vehicle_loc.x - lane_center.x, vehicle_loc.y - lane_center.y, 0)
+            lateral_dist = abs(to_vehicle.x * (-lane_dir.y) + to_vehicle.y * lane_dir.x)
+            
+            # Small bonus for staying centered (max +0.2 at center)
+            r_lane = 0.2 * max(0, 1.0 - (lateral_dist / 2.0))
+            r += r_lane
+            info["reward_lane"] = float(r_lane)
+        else:
+            lateral_dist = 0.0
+        
         r = float(np.nan_to_num(r))
         
-        # Traffic Light Checks
+        # Traffic Light Checks - ORIGINAL
         tl_state = "Green"
         traffic_light = self.vehicle.get_traffic_light()
         if traffic_light and traffic_light.get_state() == carla.TrafficLightState.Red:
@@ -465,19 +494,19 @@ class CarlaEnv(gym.Env):
                 r -= 2.0
                 info["penalty_red_light"] = -2.0
                 
-        # Stationary Penalty (STRONGER: make idling costly)
+        # Stationary Penalty - ORIGINAL
         if speed < 1.0:
-            r -= 0.5  # Was -0.1
+            r -= 0.5
             info["penalty_stationary"] = -0.5
             
-        # Collision Penalty (REDUCED: still bad but not catastrophic)
+        # Collision Penalty - ORIGINAL
         if len(self.collision_hist) > 0:
-            r -= 10.0  # Was -50.0
+            r -= 10.0
             info["penalty_collision"] = -10.0
         
         # Reward logging
         if random.random() < 0.05:
-             print(f"📊 Reward Sample: {r:.2f} (Speed: {speed:.1f} km/h) [Light: {tl_state}]", flush=True)
+             print(f"📊 R:{r:.2f} | Spd:{speed:.1f} | Lane:{lateral_dist:.2f}m", flush=True)
              
         return r, info
 
