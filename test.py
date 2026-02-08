@@ -80,8 +80,8 @@ def test():
                 total_reward = 0
                 obs = env.reset()
                 
-            if i % 50 == 0:
-                print(f"  Step {i} | Speed: {info.get('speed', 0):.1f} km/h | Light: {info.get('light_state', 'Unknown')}")
+            if i % 10 == 0:  # More frequent output for visibility
+                print(f"  Step {i} | Speed: {info.get('speed', 0):.1f} km/h | Reward: {reward:.2f}")
                 
     except KeyboardInterrupt:
         print("\n🛑 Test Validation Stopped by User.")

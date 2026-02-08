@@ -62,18 +62,20 @@ def get_carla_curriculum_config():
     """
     return [
         {
-            "name": "Stage 1: Empty Roads",
+            "name": "Stage 1: Recovery Training",
             "map": "Town01",
             "traffic_density": 0.0,
+            "spawn_offset_range": 1.5,
             "weather": "ClearNoon",
             "threshold": 200.0,
             "timesteps": 50000
         },
         {
-            "name": "Stage 2: Static Obstacles", 
+            "name": "Stage 2: Safety Engine", 
             "map": "Town01",
             "traffic_density": 0.0,
             "static_obstacles": True,
+            "spawn_offset_range": 0.5,
             "weather": "ClearNoon",
             "threshold": 300.0,
             "timesteps": 75000

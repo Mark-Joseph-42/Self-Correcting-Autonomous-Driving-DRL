@@ -41,10 +41,12 @@ class TransparencyCallback(BaseCallback):
     def _get_empty_stats():
         return {
             "speed": [], "lateral": [], "route": [],
-            "collision": [], "offroad": [], "yellow_line": [], "success": []
+            "collision": [], "offroad": [], "yellow_line": [], "success": [],
+            "interventions": [], "lane_stability_time": None, "steps": 0
         }
 
     def _on_step(self) -> bool:
+        self.stats["steps"] += 1
         infos = self.locals.get("infos", [{}])[0]
         self.stats["speed"].append(infos.get("reward_speed", 0.0))
         self.stats["lateral"].append(infos.get("reward_lateral", 0.0))
@@ -53,6 +55,16 @@ class TransparencyCallback(BaseCallback):
         self.stats["offroad"].append(infos.get("penalty_offroad", 0.0))
         self.stats["yellow_line"].append(infos.get("penalty_yellow_line", 0.0))
         self.stats["success"].append(infos.get("reward_success", 0.0))
+        
+        # Phase 3 Metrics
+        interventions = infos.get("total_interventions", 0)
+        self.stats["interventions"].append(interventions)
+        
+        # Track Lane Stability (e.g. 500 steps without significant lateral penalty)
+        if self.stats["lane_stability_time"] is None:
+            if abs(infos.get("reward_lateral", 0.0)) < 0.1 and self.stats["steps"] > 500:
+                self.stats["lane_stability_time"] = self.stats["steps"]
+                print(f"✨ Lane Stability Achieved at step {self.stats['steps']}!")
             
         if self.locals.get("dones", [False])[0]:
             self.episode_count += 1
@@ -61,8 +73,10 @@ class TransparencyCallback(BaseCallback):
         return True
 
 def print_episode_summary(stats, title="EPISODE", count=None):
-    summary = {k: sum(v) for k, v in stats.items()}
-    total = sum(summary.values())
+    summary = {k: (sum(v) if isinstance(v, list) else v) for k, v in stats.items()}
+    # Filter stats to only include types we can sum for total reward
+    r_keys = ["speed", "lateral", "route", "collision", "offroad", "yellow_line", "success"]
+    total = sum([summary[k] for k in r_keys if k in summary])
     
     # Concise Single-Line Format
     count_str = f"#{count}" if count else ""
@@ -84,8 +98,9 @@ def save_telemetry_snapshot(stage_num, stats, output_dir):
     os.makedirs(output_dir, exist_ok=True)
     filepath = os.path.join(output_dir, f"telemetry_stage_{stage_num}.txt")
     
-    summary = {k: sum(v) for k, v in stats.items()}
-    total = sum(summary.values())
+    summary = {k: (sum(v) if isinstance(v, list) else v) for k, v in stats.items()}
+    r_keys = ["speed", "lateral", "route", "collision", "offroad", "yellow_line", "success"]
+    total = sum([summary[k] for k in r_keys if k in summary])
     
     # Calculate a mock success rate if episodes were tracked
     # In a real scenario, we'd track specific success flags

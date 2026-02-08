@@ -33,11 +33,11 @@ run_stage() {
     # launch_carla.sh already waits 10s, but we'll wait a bit more to be safe
     sleep 5 
     
-    # 3. Run Training Stage
+    # 3. Run Training Stage (with process lock)
     echo "🚀 Running Training Stage $STAGE..."
     echo "🚀 Running Training Stage $STAGE..."
     # We use python -u for unbuffered output
-    python -u train.py --stage $STAGE
+    python -u train_lock.py --stage $STAGE
     
     EXIT_CODE=$?
     

@@ -7,9 +7,13 @@ def get_ppo_agent(env, device="cpu", tensorboard_log="./logs/training"):
     This logic is simulator-agnostic and will remain the same for CARLA.
     """
     device = "cuda" if torch.cuda.is_available() else "cpu"
+    # Match Phase 1 conversion: no hidden layers in head for bootstrap
+    policy_kwargs = dict(net_arch=[])
+    
     model = PPO(
-        "MlpPolicy", 
+        "MultiInputPolicy", 
         env, 
+        policy_kwargs=policy_kwargs,
         verbose=1, 
         learning_rate=5e-5, # Stable for demo
         max_grad_norm=0.5,

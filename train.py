@@ -1,8 +1,12 @@
+print("🚀 ROBUST TRAINING MODE ACTIVE", flush=True)
 import os
+import sys
 import torch
+import numpy as np
 import time
 import gc
 from agent_logic import get_ppo_agent
+from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 from metrics_logger import TransparencyCallback
 
@@ -18,11 +22,9 @@ def train():
     parser.add_argument("--stage", type=int, default=0, help="Run specific stage (1-5). 0=Run all.")
     args = parser.parse_args()
     
-    import sys
-    sys.stdout.reconfigure(line_buffering=True)
-    print("🚀 ROBUST TRAINING MODE ACTIVE", flush=True)
+    # Removed sys.stdout.reconfigure for stability
     
-    # Selection of backend
+    # Selection of backend (Default to CARLA)
     USE_CARLA = os.getenv("USE_CARLA", "1") == "1"
     
     if USE_CARLA:
@@ -61,28 +63,39 @@ def train():
             output_dir = f"./outputs/stage_{args.stage}"
             os.makedirs(output_dir, exist_ok=True)
             
-            # Initialize Environment
-            env = make_env(stage)
-            
-            # Load Model or Create New
-            if args.stage == 1:
-                print("🆕 Initializing new PPO agent...")
-                model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
-            else:
+            # 1. Prepare Model (if loading from previous stage)
+            model = None
+            if args.stage > 1:
                 # Load from previous stage
                 prev_stage = args.stage - 1
                 prev_model_path = f"./outputs/stage_{prev_stage}/ppo_agent_stage_{prev_stage}.zip"
-                # Fallback to final save if callback save missing
                 if not os.path.exists(prev_model_path):
                     prev_model_path = f"./outputs/stage_{prev_stage}/final_model_stage_{prev_stage}.zip"
                 
                 if os.path.exists(prev_model_path):
-                    print(f"🔄 Loading model from {prev_model_path}...")
-                    from stable_baselines3 import PPO
-                    model = PPO.load(prev_model_path, env=env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
+                    print(f"🔄 Preparing to load model from {prev_model_path}...")
+                    # Delay loading until env is ready for stage > 1 to avoid mismatch
+                    pass # We'll load it in step 3
+
+            # 2. Initialize CARLA Environment
+            print(f"🚀 Initializing Environment...", flush=True)
+            env = make_env(stage)
+            
+            # 3. Finalize Model with Env
+            if model is None:
+                if args.stage == 1 and os.path.exists("models/ppo_bc_baseline.zip"):
+                    print(f"🧠 Loading BC Bootstrap weights from models/ppo_bc_baseline.zip...")
+                    model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
+                    print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
                 else:
-                    print(f"⚠️ Warning: Previous model not found at {prev_model_path}. Starting fresh.")
+                    print("🆕 Initializing fresh PPO agent...")
                     model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
+            else:
+                print("✅ Setting environment for loaded model...")
+                model.set_env(env)
+                # Ensure reset for starting
+                env.reset()
+                print(f"🛠️  Policy Device: {model.policy.device}", flush=True)
 
             # Setup Callbacks
             checkpoint_callback = CheckpointCallback(
@@ -101,8 +114,9 @@ def train():
             # Train
             # Train loop with TQDM for stability (avoids Rich/sys.meta_path crash)
             from tqdm import tqdm
-            print(f"Training Stage {args.stage} (Goal: {stage['threshold']} reward)...")
+            print(f"Training Stage {args.stage} (Goal: {stage['threshold']} reward)...", flush=True)
             
+            print("🚀 Calling model.learn() loop...", flush=True)
             pbar = tqdm(total=stage['timesteps'], file=sys.stdout, dynamic_ncols=True)
             current_steps = 0
             
