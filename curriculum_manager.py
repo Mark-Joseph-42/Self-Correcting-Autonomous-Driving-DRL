@@ -68,7 +68,8 @@ def get_carla_curriculum_config():
             "spawn_offset_range": 1.5,
             "weather": "ClearNoon",
             "threshold": 200.0,
-            "timesteps": 50000
+            "timesteps": 50000,
+            "fixed_spawn_idx": 0
         },
         {
             "name": "Stage 2: Safety Engine", 

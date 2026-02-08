@@ -1,25 +1,29 @@
 from stable_baselines3 import PPO
 import torch
 
-def get_ppo_agent(env, device="cpu", tensorboard_log="./logs/training"):
+def get_ppo_agent(env, device="cpu", tensorboard_log="./logs/training", debug=False):
     """
-    Initializes the PPO agent with a MultiInputPolicy (Sensor Fusion).
-    This logic is simulator-agnostic and will remain the same for CARLA.
+    Initializes the PPO agent. Debug mode uses smaller buffers for faster iteration.
     """
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    # Match Phase 1 conversion: no hidden layers in head for bootstrap
-    policy_kwargs = dict(net_arch=[])
+    # Linear arch (net_arch=[]) was too weak to coordinate steer/throttle.
+    # Increasing complexity to [128, 128] for better behavior learning.
+    policy_kwargs = dict(net_arch=[128, 128])
+    
+    # Debug mode: Update every 512 steps instead of 2048 for faster feedback
+    n_steps = 512 if debug else 2048
+    learning_rate = 1e-3 if debug else 3e-4  # Aggressive LR for debug
     
     model = PPO(
         "MultiInputPolicy", 
         env, 
         policy_kwargs=policy_kwargs,
         verbose=1, 
-        learning_rate=3e-4,  # Faster learning
+        learning_rate=learning_rate, 
         max_grad_norm=0.5,
-        n_steps=2048,  # Larger rollout buffer (was 512)
-        batch_size=256,  # Larger batches (was 64)
-        n_epochs=10,  # More epochs per update (default)
+        n_steps=n_steps, 
+        batch_size=256 if not debug else 128,
+        n_epochs=10, 
         ent_coef=0.01,
         device=device,
         stats_window_size=1, 

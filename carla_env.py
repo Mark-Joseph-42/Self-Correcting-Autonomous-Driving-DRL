@@ -116,6 +116,7 @@ class CarlaEnv(gym.Env):
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.step_count = 0
         self.prev_steer = 0.0
+        self.offroad_steps = 0 # Track consecutive steps off-road
         
         # Display settings
         self.show_display = self.config.get("show_display", True)
@@ -166,7 +167,13 @@ class CarlaEnv(gym.Env):
             # Fallback to a manual transform if empty
             spawn_point = carla.Transform(carla.Location(x=0, y=0, z=2))
         else:
-            spawn_point = random.choice(spawn_points)
+            # DEBUG: Use fixed spawn if configured (faster learning of specific segments)
+            fixed_spawn_idx = self.config.get("fixed_spawn_idx", -1)
+            if fixed_spawn_idx >= 0 and fixed_spawn_idx < len(spawn_points):
+                spawn_point = spawn_points[fixed_spawn_idx]
+                print(f"📌 DEBUG: Using fixed spawn point #{fixed_spawn_idx}")
+            else:
+                spawn_point = random.choice(spawn_points)
             
             # Apply randomized offset for recovery training (Stage 1)
             spawn_offset_range = self.config.get("spawn_offset_range", 0.0)
@@ -250,18 +257,33 @@ class CarlaEnv(gym.Env):
         if self.vehicle is None:
             return self.reset(), 0, True, {}
 
+        # Fetch current location and waypoint for logic/rewards
+        vehicle_loc = self.vehicle.get_location()
+        waypoint = self.world.get_map().get_waypoint(vehicle_loc, project_to_road=True, lane_type=carla.LaneType.Any)
+
         steer = float(action[0])
         throttle_brake = float(action[1])
         
         control = carla.VehicleControl()
         control.steer = steer
+        
+        # New Action Mapping: 
+        # [0, 1] -> Throttle
+        # [-0.4, 0] -> Brake
+        # [-1, -0.4] -> Reverse
         if throttle_brake >= 0:
-            # Throttle Boost: Map [0, 1] -> [0.3, 1.0] to overcome static friction
             control.throttle = 0.3 + (0.7 * throttle_brake)
             control.brake = 0.0
-        else:
+            control.reverse = False
+        elif throttle_brake > -0.4:
             control.throttle = 0.0
-            control.brake = abs(throttle_brake)
+            control.brake = abs(throttle_brake) * 2.5 # Scale to [0, 1]
+            control.reverse = False
+        else:
+            # Reverse: Apply partial throttle in reverse gear
+            control.throttle = (abs(throttle_brake) - 0.4) / 0.6 # Scale remainder to [0, 1]
+            control.brake = 0.0
+            control.reverse = True
         
         self.vehicle.apply_control(control)
         self.obstacle_dist = 50.0 # Reset for this frame
@@ -275,6 +297,12 @@ class CarlaEnv(gym.Env):
         # Live Visualization
         if self.show_display:
             self._visualize(obs)
+        # Update off-road tracking BEFORE reward calculation
+        if waypoint.lane_type != carla.LaneType.Driving:
+            self.offroad_steps += 1
+        else:
+            self.offroad_steps = 0
+
         reward, info = self._compute_reward()
         
         # Track safety interventions
@@ -283,7 +311,9 @@ class CarlaEnv(gym.Env):
             
         info["total_interventions"] = self.safety_monitor.intervention_count
         
-        done = bool(self.collision_hist)
+        done = bool(self.collision_hist) or (self.offroad_steps > 40)
+        if self.offroad_steps > 40:
+             print(f"🛑 EARLY RESET: Stuck off-road for {self.offroad_steps} steps.")
         
         if info.get("reward_route", 0) > 0.9:
              self._stage_complete = True
@@ -377,9 +407,17 @@ class CarlaEnv(gym.Env):
         tags = i2[:, :, 2] # This might vary. Let's use standard mapper.
         
         # Standardized [0, 255] grid
+        # Tags (CARLA 0.9.13): Road=7, RoadLine=6, Sidewalk=8, Building=1, Fence=2, Pole=5, Wall=11
         labeled = np.zeros_like(tags, dtype=np.uint8)
         labeled[tags == 7] = 255  # Road
         labeled[tags == 6] = 255  # Road Lines
+        labeled[tags == 8] = 128  # Sidewalk (Warning)
+        
+        # Hazard Tags (Avoid these!)
+        hazards = [1, 2, 5, 11]
+        for tag in hazards:
+            labeled[tags == tag] = 80  # Hazard
+            
         self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, 64)
         
     def _on_obstacle(self, event):
@@ -421,13 +459,29 @@ class CarlaEnv(gym.Env):
             else:
                 obs[10] = 1.0 # Green by default
                 
-        # 3. Obstacle Processing (Replaced LIDAR)
-        # We fill the forward sectors with the obstacle distance
-        # Obs[12-43] (32 sectors). Let's say indices 14-18 are "front".
-        # For simplicity, we fill ALL sectors with the nearest distance because the sensor is non-directional (or forward only)
-        # Normalized distance
-        norm_dist = np.clip(self.obstacle_dist / 50.0, 0.0, 1.0)
-        obs[12:] = norm_dist 
+        # 3. Virtual Radar (Directional Obstacle Awareness)
+        # We fill 32 sectors [12-43] based on the semantic image
+        # This gives the agent 'vision' of where poles/walls are
+        radar_vec = np.ones(32, dtype=np.float32)
+        if hasattr(self, 'latest_semantic'):
+            sem = self.latest_semantic[0] # (64, 64)
+            # Map hazard tags to proximity
+            # We only look at the bottom 2/3 of the image (closest to car)
+            for sector in range(32):
+                col_start = sector * 2
+                col_end = col_start + 2
+                # Look for pixels with value 80 (Hazard) or 128 (Sidewalk)
+                # Find the 'highest' row (closest to car bottom) with a hazard
+                hazard_mask = (sem[:, col_start:col_end] == 80) | (sem[:, col_start:col_end] == 128)
+                rows = np.where(hazard_mask)[0]
+                if len(rows) > 0:
+                    # Row 63 is the very bottom (closest)
+                    closest_row = np.max(rows)
+                    # Normalize: 0.0 at bottom (colliding), 1.0 at distance
+                    proximity = 1.0 - (closest_row / 63.0)
+                    radar_vec[sector] = proximity
+        
+        obs[12:] = radar_vec
 
         # 4. Speed Limit (NEW)
         speed_limit = self.vehicle.get_speed_limit() if self.vehicle else 30.0
@@ -443,9 +497,10 @@ class CarlaEnv(gym.Env):
 
     def _compute_reward(self):
         """
-        RESTORED ORIGINAL from 50% branch + gentle lane centering.
-        The original worked - agent drove at 30km/h.
-        Adding only ONE refinement: lane centering bonus.
+        Stability-Based Reward:
+        - Penalizes lateral velocity (sideways motion) relative to the road.
+        - Scales lane centering with speed (higher speed = stricter discipline).
+        - Maintains red light and collision protection.
         """
         r = 0.0
         info = {}
@@ -455,58 +510,126 @@ class CarlaEnv(gym.Env):
         v = self.vehicle.get_velocity()
         speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2) 
         
-        # 1. Target Speed Reward (peak at 30 km/h) - ORIGINAL
+        # 1. Target Speed Reward (peak at 30 km/h)
         r_speed = 1.0 - (abs(speed - 30.0) / 30.0)
         
-        # 2. Dense Movement Reward (bonus for ANY forward motion) - ORIGINAL
-        r_movement = 0.02 * min(speed, 50.0)  # +1.0 at 50 km/h
+        # 2. Dense Movement Reward
+        r_movement = 0.02 * min(speed, 50.0)
         
         r += max(-1.0, min(1.0, r_speed)) + r_movement
         info["reward_speed"] = float(np.nan_to_num(r_speed))
         info["reward_movement"] = float(np.nan_to_num(r_movement))
         
-        # 3. GENTLE Lane Centering (NEW - only when moving)
-        # This is the ONLY addition to the original
-        if speed > 10.0:  # Only apply when actually driving
-            waypoint = self.world.get_map().get_waypoint(self.vehicle.get_location(), project_to_road=True)
-            vehicle_loc = self.vehicle.get_location()
-            lane_center = waypoint.transform.location
-            lane_dir = waypoint.transform.get_forward_vector()
+        # Get Waypoint Info
+        waypoint = self.world.get_map().get_waypoint(
+            self.vehicle.get_location(), 
+            project_to_road=True,
+            lane_type=carla.LaneType.Driving
+        )
+        road_fwd = waypoint.transform.get_forward_vector()
+        road_right = carla.Vector3D(-road_fwd.y, road_fwd.x, 0) # Perpendicular to road
+        
+        # 3. HEADING ALIGNMENT (Fixes "Circular Driving" exploit)
+        # Dot product between car forward and road forward
+        vehicle_fwd = self.vehicle.get_transform().get_forward_vector()
+        # Dot product (1.0 = aligned, 0 = perpendicular, -1 = reversed)
+        heading_align = vehicle_fwd.x * road_fwd.x + vehicle_fwd.y * road_fwd.y
+        
+        # Linear alignment reward/penalty
+        r_align = 0.5 * heading_align # +/- 0.5
+        r += r_align
+        info["reward_align"] = float(r_align)
+
+        # 4. LATERAL VELOCITY PENALTY (Stability Focus)
+        lat_vel = abs(v.x * road_right.x + v.y * road_right.y) * 3.6 
+        
+        # Stricter Stability: Allowed up to 20% sideways motion
+        r_stability = 0.0
+        if speed > 5.0:
+            stability_threshold = speed * 0.2 
+            if lat_vel > stability_threshold:
+                r_stability = -0.15 * (lat_vel - stability_threshold) # Stiffened from -0.05
+        
+        r += r_stability
+        info["penalty_stability"] = float(r_stability)
+        
+        # 4. SPEED-SCALED LANE DISCIPLINE (Linear for easier learning)
+        vehicle_loc = self.vehicle.get_location()
+        lane_center = waypoint.transform.location
+        to_vehicle = carla.Vector3D(vehicle_loc.x - lane_center.x, vehicle_loc.y - lane_center.y, 0)
+        lateral_dist = abs(to_vehicle.x * road_right.x + to_vehicle.y * road_right.y)
+        
+        speed_scale = max(1.0, speed / 20.0)
+        r_lane = 0.4 * speed_scale * max(0, 1.0 - (lateral_dist / 1.75)) # Linear falloff
+        r += r_lane
+        info["reward_lane"] = float(r_lane)
+        
+        # Wrong Lane Penalty (Left Side)
+        if waypoint.lane_id > 0:
+            r -= 1.0 * speed_scale # Harder penalty at speed
+            info["penalty_wrong_lane"] = -1.0 * speed_scale
             
-            to_vehicle = carla.Vector3D(vehicle_loc.x - lane_center.x, vehicle_loc.y - lane_center.y, 0)
-            lateral_dist = abs(to_vehicle.x * (-lane_dir.y) + to_vehicle.y * lane_dir.x)
-            
-            # Small bonus for staying centered (max +0.2 at center)
-            r_lane = 0.2 * max(0, 1.0 - (lateral_dist / 2.0))
-            r += r_lane
-            info["reward_lane"] = float(r_lane)
-        else:
-            lateral_dist = 0.0
+        # Sidewalk/Off-road Penalty (Major deterrent)
+        if waypoint.lane_type != carla.LaneType.Driving:
+            # If not in a driving lane, penalize heavily
+            r -= 2.0 * speed_scale 
+            info["penalty_off_road"] = -2.0 * speed_scale
         
         r = float(np.nan_to_num(r))
         
-        # Traffic Light Checks - ORIGINAL
+        # 5. Traffic Light (Strong Penalty + Smooth Braking Reward)
         tl_state = "Green"
+        control = self.vehicle.get_control()
         traffic_light = self.vehicle.get_traffic_light()
         if traffic_light and traffic_light.get_state() == carla.TrafficLightState.Red:
             tl_state = "Red"
-            if speed > 1.0:
-                r -= 2.0
-                info["penalty_red_light"] = -2.0
+            if speed > 2.0:
+                r -= 5.0
+                info["penalty_red_light"] = -5.0
+            elif speed <= 2.0 and control.brake > 0.1:
+                # Reward for successfully stopping at red
+                r += 0.5
+                info["reward_red_stop"] = 0.5
                 
-        # Stationary Penalty - ORIGINAL
+        # 6. Proximity Penalty (Proactive Obstacle Avoidance)
+        # We use the radar data from _get_obs (implicitly via the observation vector, 
+        # but for reward we can just look at the last calculated proximity)
+        r_proximity = 0.0
+        if hasattr(self, 'latest_semantic'):
+            # Look at the 'front' sectors (e.g. sectors 8-24)
+            # Find closest hazard proximity (0.0=colliding, 1.0=clear)
+            sem = self.latest_semantic[0]
+            hazard_mask = (sem[40:, 16:48] == 80) | (sem[40:, 16:48] == 128)
+            rows = np.where(hazard_mask)[0]
+            if len(rows) > 0:
+                # If hazards are in the bottom part of the image
+                closest_row = np.max(rows)
+                # If row is > 45 (approx 3-5 meters), start penalizing
+                if closest_row > 45:
+                    proximity_factor = (closest_row - 45) / (63 - 45)
+                    r_proximity = -1.0 * proximity_factor
+        
+        r += r_proximity
+        info["penalty_proximity"] = float(r_proximity)
+
+        # 7. Reverse Penalty (Discourage unless needed for recovery)
+        r_reverse = -0.2 if control.reverse else 0.0
+        r += r_reverse
+        info["penalty_reverse"] = float(r_reverse)
+
+        # 8. Stationary/Collision/Stuck
         if speed < 1.0:
             r -= 0.5
             info["penalty_stationary"] = -0.5
-            
-        # Collision Penalty - ORIGINAL
         if len(self.collision_hist) > 0:
             r -= 10.0
             info["penalty_collision"] = -10.0
+        if self.offroad_steps > 40:
+            r -= 10.0
+            info["penalty_stuck"] = -10.0
         
-        # Reward logging
         if random.random() < 0.05:
-             print(f"📊 R:{r:.2f} | Spd:{speed:.1f} | Lane:{lateral_dist:.2f}m", flush=True)
+             print(f"📊 R:{r:.2f} | V_Lat:{lat_vel:.1f} | Lane:{lateral_dist:.2f}m | S:{speed:.1f}", flush=True)
              
         return r, info
 

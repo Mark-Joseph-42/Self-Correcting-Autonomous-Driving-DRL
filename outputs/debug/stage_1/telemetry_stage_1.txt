@@ -1,11 +1,11 @@
 
 =========================================
 STAGE 1 COMPLETION SNAPSHOT
-Timestamp: 2026-02-08 15:40:38
+Timestamp: 2026-02-08 16:17:13
 =========================================
-Total Reward Scored: 0.59
+Total Reward Scored: 23.72
 Distance Progress:   0.0
-Speed Reward:        0.6
+Speed Reward:        23.7
 Alignment Reward:    0.0
 Safety Penalties:    0.0
 -----------------------------------------

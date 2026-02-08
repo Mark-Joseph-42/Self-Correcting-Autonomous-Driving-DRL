@@ -20,6 +20,8 @@ def train():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--stage", type=int, default=0, help="Run specific stage (1-5). 0=Run all.")
+    parser.add_argument("--debug", action="store_true", help="Enable ultra-fast debug training mode.")
+    parser.add_argument("--steps", type=int, default=None, help="Override total timesteps for this run.")
     args = parser.parse_args()
     
     # Removed sys.stdout.reconfigure for stability
@@ -55,13 +57,13 @@ def train():
                 return
 
             stage = stages[stage_idx]
-            print(f"\n🚀 STARTING SINGLE STAGE: {stage['name']} (Map: {stage['map']})")
             
-            # Force display off
-            stage["show_display"] = False
+            # Use debug subfolder if requested
+            base_output = "./outputs/debug" if args.debug else "./outputs"
+            output_dir = f"{base_output}/stage_{args.stage}"
+            os.makedirs(f"{output_dir}/checkpoints", exist_ok=True)
             
-            output_dir = f"./outputs/stage_{args.stage}"
-            os.makedirs(output_dir, exist_ok=True)
+            print(f"\n🚀 STARTING {'DEBUG ' if args.debug else ''}SINGLE STAGE: {stage['name']} (Map: {stage['map']})")
             
             # 1. Prepare Model (if loading from previous stage)
             model = None
@@ -85,11 +87,15 @@ def train():
             if model is None:
                 if args.stage == 1 and os.path.exists("models/ppo_bc_baseline.zip"):
                     print(f"🧠 Loading BC Bootstrap weights from models/ppo_bc_baseline.zip...")
-                    model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
-                    print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
+                    try:
+                        model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
+                        print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
+                    except Exception as e:
+                        print(f"⚠️ Warning: Failed to load baseline ({e}). Initializing fresh agent instead.")
+                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
                 else:
-                    print("🆕 Initializing fresh PPO agent...")
-                    model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
+                    print(f"🆕 Initializing fresh PPO agent (Debug: {args.debug})...")
+                    model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
             else:
                 print("✅ Setting environment for loaded model...")
                 model.set_env(env)
@@ -98,8 +104,9 @@ def train():
                 print(f"🛠️  Policy Device: {model.policy.device}", flush=True)
 
             # Setup Callbacks
+            save_freq = 500 if args.debug else 5000
             checkpoint_callback = CheckpointCallback(
-                save_freq=5000, 
+                save_freq=save_freq, 
                 save_path=f"{output_dir}/checkpoints",
                 name_prefix=f"stage{args.stage}_model"
             )
@@ -116,14 +123,18 @@ def train():
             from tqdm import tqdm
             print(f"Training Stage {args.stage} (Goal: {stage['threshold']} reward)...", flush=True)
             
-            print("🚀 Calling model.learn() loop...", flush=True)
-            pbar = tqdm(total=stage['timesteps'], file=sys.stdout, dynamic_ncols=True)
+            # Get total timesteps (Override for debug)
+            total_timesteps = args.steps if args.steps else stage['timesteps']
+            if args.debug and not args.steps:
+                total_timesteps = 5000 # 5-min snapshot
+            
+            pbar = tqdm(total=total_timesteps, file=sys.stdout, dynamic_ncols=True)
             current_steps = 0
             
             try:
-                while current_steps < stage['timesteps']:
+                while current_steps < total_timesteps:
                      # Train in small chunks
-                     chunk_size = 2048
+                     chunk_size = 512 if args.debug else 2048
                      model.learn(
                         total_timesteps=chunk_size, 
                         callback=[checkpoint_callback, stop_callback, transparency_callback], 
