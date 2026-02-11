@@ -1,4 +1,7 @@
 #!/bin/bash
+# Environment fixes for stability
+export OMP_NUM_THREADS=1
+export FORCE_CPU=0 # Set to 1 if GPU hangs persist
 # run_curriculum.sh - Robust multi-stage training with server restarts
 
 # Initialize conda

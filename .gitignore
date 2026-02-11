@@ -3,3 +3,11 @@ logs/
 *.pyc
 __pycache__/
 .DS_Store
+
+# Large Artifacts
+models/
+outputs/
+dataset/
+*.zip
+*.pth
+*.egg

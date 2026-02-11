@@ -29,6 +29,7 @@ def get_ppo_agent(env, device="cpu", tensorboard_log="./logs/training", debug=Fa
         stats_window_size=1, 
         tensorboard_log=tensorboard_log
     )
+    print("✅ PPO Constructor Complete.", flush=True)
     return model
 
 def load_agent(path, env=None, device="cpu"):

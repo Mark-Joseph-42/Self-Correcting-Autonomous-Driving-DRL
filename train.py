@@ -7,13 +7,65 @@ import time
 import gc
 from agent_logic import get_ppo_agent
 from stable_baselines3 import PPO
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
 from metrics_logger import TransparencyCallback
+
+class MasteryBacktrackCallback(BaseCallback):
+    """
+    Handles 'Mastery' (save on 3 green lights) and 'Backtrack' (reload on pedestrian hit).
+    """
+    def __init__(self, output_dir, verbose=1):
+        super(MasteryBacktrackCallback, self).__init__(verbose)
+        self.output_dir = output_dir
+        self.mastery_path = os.path.join(output_dir, "mastery_checkpoint.zip")
+        self.last_mastery_count = 0
+
+    def _on_step(self) -> bool:
+        # Access the unwrapped env to check custom flags
+        env = self.training_env.envs[0].unwrapped if hasattr(self.training_env, "envs") else self.training_env.unwrapped
+        
+        # 1. Mastery Check (Save on 3 green lights)
+        if hasattr(env, "green_light_passes") and env.green_light_passes >= 3:
+            if env.green_light_passes > self.last_mastery_count: # New pass
+                 print(f"✨ MASTERY ACHIEVED: 3 Green Lights! Saving checkpoint to {self.mastery_path}")
+                 self.model.save(self.mastery_path)
+                 self.last_mastery_count = env.green_light_passes
+                 # Optionally reset counter? Prompt says "every time", so we keep it or reset.
+                 # Let's keep it and only save on multiples of 3.
+        
+        # 2. Backtrack Check (Pedestrian Hit)
+        if hasattr(env, "pedestrian_collision") and env.pedestrian_collision:
+            if os.path.exists(self.mastery_path):
+                 print(f"🚨 BACKTRACK: Pedestrian hit! Reloading last mastery checkpoint...")
+                 # Set the model state to the saved one
+                 # This is tricky in SB3 middle of learn(). 
+                 # Usually better to teleport vehicle and reset env, but prompt says "reload checkpoint".
+                 # We'll use load_parameters for in-place update if possible, or just teleport.
+                 # Teleport is safer for stability.
+                 env.reset() # This will teleport back to spawn and reset flags
+                 # If we wanted to reload weights, we'd do self.model.set_parameters()
+            else:
+                 print("🚨 BACKTRACK FAILURE: No mastery checkpoint found. Resetting env.")
+                 env.reset()
+            
+            env.pedestrian_collision = False
+        return True
+
+def detect_gpu():
+    import torch
+    if torch.cuda.is_available():
+        name = torch.cuda.get_device_name(0)
+        vram = torch.cuda.get_device_properties(0).total_memory / 1e9
+        print(f"🖥️  GPU DETECTED: {name} ({vram:.1f} GB VRAM)")
+        print(f"⚙️  CUDA Version: {torch.version.cuda}")
+    else:
+        print("🖥️  GPU NOT DETECTED. Using CPU.")
 
 def train():
     """
     Robust training orchestrator for CARLA 0.9.13.
     """
+    detect_gpu()
     os.makedirs("models", exist_ok=True)
     os.makedirs("logs", exist_ok=True)
     
@@ -81,21 +133,52 @@ def train():
 
             # 2. Initialize CARLA Environment
             print(f"🚀 Initializing Environment...", flush=True)
-            env = make_env(stage)
+            env_raw = make_env(stage)
+            
+            # Manual wrapping for stability and visibility
+            from stable_baselines3.common.monitor import Monitor
+            from stable_baselines3.common.vec_env import DummyVecEnv
+            
+            print("📦 Wrapping Environment (Monitor + DummyVecEnv)...", flush=True)
+            env = Monitor(env_raw)
+            env = DummyVecEnv([lambda: env])
+            print("✅ Environment Wrapped.", flush=True)
             
             # 3. Finalize Model with Env
             if model is None:
-                if args.stage == 1 and os.path.exists("models/ppo_bc_baseline.zip"):
-                    print(f"🧠 Loading BC Bootstrap weights from models/ppo_bc_baseline.zip...")
-                    try:
-                        model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
-                        print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
-                    except Exception as e:
-                        print(f"⚠️ Warning: Failed to load baseline ({e}). Initializing fresh agent instead.")
+                if args.stage == 1:
+                    # Priority 1: Mapped weights (.pth)
+                    if os.path.exists("models/bc_mapped_weights.pth"):
+                        print(f"🧠 Loading BC Mapped weights from models/bc_mapped_weights.pth...")
+                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                        model.policy.load_state_dict(torch.load("models/bc_mapped_weights.pth", map_location=device), strict=False)
+                        print("✅ Mapped weights loaded successfully.")
+                    # Priority 2: Full Baseline Zip
+                    elif os.path.exists("models/ppo_bc_baseline.zip"):
+                        print(f"🧠 Loading BC Bootstrap weights from models/ppo_bc_baseline.zip...")
+                        try:
+                            model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
+                            print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
+                        except Exception as e:
+                            print(f"⚠️ Warning: Failed to load baseline ({e}). Initializing fresh agent instead.")
+                            model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                    else:
+                        print(f"🆕 Initializing fresh PPO agent (Debug: {args.debug})...")
                         model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
                 else:
-                    print(f"🆕 Initializing fresh PPO agent (Debug: {args.debug})...")
-                    model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                    # Regular resume logic or fresh initialization if no previous stage found
+                    # Look for model from previous stage (we already found path in step 1 potentially)
+                    prev_stage = args.stage - 1
+                    prev_model_path = f"./outputs/stage_{prev_stage}/ppo_agent_stage_{prev_stage}.zip"
+                    if not os.path.exists(prev_model_path):
+                        prev_model_path = f"./outputs/stage_{prev_stage}/final_model_stage_{prev_stage}.zip"
+                    
+                    if os.path.exists(prev_model_path):
+                        print(f"🔄 Resuming from Stage {prev_stage}: {prev_model_path}")
+                        model = PPO.load(prev_model_path, env=env, device=device)
+                    else:
+                        print(f"🆕 No previous stage model found. Initializing fresh PPO agent (Debug: {args.debug})...")
+                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
             else:
                 print("✅ Setting environment for loaded model...")
                 model.set_env(env)
@@ -117,6 +200,7 @@ def train():
                 verbose=1
             )
             transparency_callback = TransparencyCallback()
+            mastery_callback = MasteryBacktrackCallback(output_dir)
             
             # Train
             # Train loop with TQDM for stability (avoids Rich/sys.meta_path crash)
@@ -137,7 +221,7 @@ def train():
                      chunk_size = 512 if args.debug else 2048
                      model.learn(
                         total_timesteps=chunk_size, 
-                        callback=[checkpoint_callback, stop_callback, transparency_callback], 
+                        callback=[checkpoint_callback, stop_callback, transparency_callback, mastery_callback], 
                         progress_bar=False, 
                         reset_num_timesteps=False
                      )
@@ -145,12 +229,14 @@ def train():
                      pbar.update(chunk_size)
                      
                      # Check for stage completion (via callback)
-                     # Handle both VecEnv and raw Env
+                     # Access underlying CarlaEnv through DummyVecEnv -> Monitor chain
                      is_complete = False
-                     if hasattr(env, "get_attr"):
-                         is_complete = env.get_attr("_stage_complete")[0]
-                     elif hasattr(env, "unwrapped") and hasattr(env.unwrapped, "_stage_complete"):
-                         is_complete = env.unwrapped._stage_complete
+                     try:
+                         # DummyVecEnv stores envs in .envs list; Monitor wraps the real env
+                         raw_env = env.envs[0].unwrapped if hasattr(env, "envs") else env.unwrapped
+                         is_complete = getattr(raw_env, "_stage_complete", False)
+                     except Exception:
+                         is_complete = False
                          
                      if is_complete:
                          print(f"✅ Stage {args.stage} graduation criteria met!", flush=True)

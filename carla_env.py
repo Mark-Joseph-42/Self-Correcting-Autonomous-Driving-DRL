@@ -5,6 +5,7 @@ import random
 import time
 import gym
 from gym import spaces
+from collections import deque
 try:
     import cv2
 except ImportError:
@@ -109,8 +110,9 @@ class CarlaEnv(gym.Env):
         self.headless = not self.show_display # Inferred from display flag
         
         # RL spaces: MultiInput (Image + Vector)
+        width = 128 if self.config.get("ray_scale", False) else 64
         self.observation_space = spaces.Dict({
-            "semantic": spaces.Box(low=0.0, high=1.0, shape=(1, 64, 64), dtype=np.float32),
+            "semantic": spaces.Box(low=0.0, high=1.0, shape=(1, 64, width), dtype=np.float32),
             "vector": spaces.Box(low=-np.inf, high=np.inf, shape=(44,), dtype=np.float32)
         })
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
@@ -124,24 +126,18 @@ class CarlaEnv(gym.Env):
             self.show_display = False
 
         # CARLA initialization
-        print(f"Connecting to CARLA server at {self.host}:{self.port}...")
         self.client = carla.Client(self.host, self.port)
-        self.client.set_timeout(40.0)
+        self.client.set_timeout(30.0)
         
         try:
             current_world = self.client.get_world()
             current_map = current_world.get_map().name
             if self.town in current_map:
-                print(f"✅ World {self.town} is already loaded.")
                 self.world = current_world
             else:
-                print(f"🔄 Loading world {self.town}...")
                 self.world = self.client.load_world(self.town)
-                print(f"✅ Loaded {self.town}")
         except Exception as e:
-            print(f"⚠️ World handle error: {e}")
             self.world = self.client.get_world()
-            print(f"Using: {self.world.get_map().name}")
 
         self.map = self.world.get_map()
         self.blueprint_library = self.world.get_blueprint_library()
@@ -152,15 +148,27 @@ class CarlaEnv(gym.Env):
         self.sync_manager = None
         self.obstacle_dist = 50.0
         self.safety_monitor = SafetyMonitor()
-        self.latest_semantic = np.zeros((1, 64, 64), dtype=np.uint8)
+        width = 128 if self.config.get("ray_scale", False) else 64
+        self.latest_semantic = np.zeros((1, 64, width), dtype=np.uint8)
         self._stage_complete = False
-        self.spectator = self.world.get_spectator() # Cache spectator
+        self.spectator = None
+        
+        # Stage specific flags
+        self.target_friction = self.config.get("tire_friction", None)
+
+        # "Turbo" & Safety Buffers
+        self.state_buffer = deque(maxlen=40)
+        self.green_light_passes = 0
+        self.pedestrian_collision = False
+        self.last_red_light_id = None
 
     def reset(self):
         print("\n🔄 reset() called", flush=True)
+        print("🧹 Cleaning up actors...", flush=True)
         self._cleanup_actors()
         
         # 1. Validate and Pick Spawn Point
+        print("📍 Picking spawn point...", flush=True)
         spawn_points = self.map.get_spawn_points()
         if not spawn_points:
             print("❌ ERROR: No spawn points found in this map!")
@@ -186,6 +194,11 @@ class CarlaEnv(gym.Env):
                 right = carla.Vector3D(-fwd.y, fwd.x, 0) # Rotate 90 deg
                 spawn_point.location += right * offset
                 print(f"🔀 Applied spawn offset: {offset:.2f}m")
+            
+            # Reset buffers on spawn
+            self.state_buffer.clear()
+            self.green_light_passes = 0
+            self.pedestrian_collision = False
                 
             print(f"📍 Selected Spawn Point: {spawn_point.location}")
 
@@ -215,6 +228,18 @@ class CarlaEnv(gym.Env):
             self.world.tick()
         time.sleep(1.0) # More time for physics
 
+        # 3B. Apply Tire Friction (Stage 4)
+        if self.target_friction is not None:
+             try:
+                 print(f"🛞 Setting tire friction to {self.target_friction}...")
+                 physics_control = self.vehicle.get_physics_control()
+                 for wheel in physics_control.wheels:
+                     wheel.tire_friction = self.target_friction
+                 self.vehicle.apply_physics_control(physics_control)
+                 print("✅ Tire friction applied.")
+             except Exception as e:
+                 print(f"⚠️ Failed to apply tire friction: {e}")
+
         # 4. Setup sync manager
         self.sync_manager = CarlaSyncManager(self.world, [], fps=self.fps)
         
@@ -230,11 +255,19 @@ class CarlaEnv(gym.Env):
         self._set_spectator_follow()
         
         print("✅ reset() returning obs", flush=True)
+        self.collision_hist = [] # Clear history on reset
         return self._get_obs()
 
     def _set_spectator_follow(self):
         """Moves the CARLA spectator to look at the ego-vehicle"""
         if self.headless: return # Save resources
+        
+        if self.spectator is None:
+            try:
+                self.spectator = self.world.get_spectator()
+            except:
+                return
+                
         try:
             if self.vehicle is None or not self.vehicle.is_alive:
                 return
@@ -256,6 +289,11 @@ class CarlaEnv(gym.Env):
         self.step_count += 1
         if self.vehicle is None:
             return self.reset(), 0, True, {}
+
+        # 1A. Snapshot Recovery (Save state before action)
+        current_transform = self.vehicle.get_transform()
+        current_velocity = self.vehicle.get_velocity()
+        self.state_buffer.append((current_transform, current_velocity))
 
         # Fetch current location and waypoint for logic/rewards
         vehicle_loc = self.vehicle.get_location()
@@ -286,6 +324,23 @@ class CarlaEnv(gym.Env):
             control.reverse = True
         
         self.vehicle.apply_control(control)
+        
+        # 1E. Pedestrian Emergency Brake (Override if dangerous)
+        if self.config.get("enable_pedestrian_safety", True):
+            front_hazard = False
+            if hasattr(self, 'latest_semantic'):
+                sem = self.latest_semantic[0]
+                # Look for Pedestrian Tag (40 in our mapping) in front central sectors
+                pedestrian_mask = (sem[40:, 24:40] == 40)
+                if np.any(pedestrian_mask):
+                    front_hazard = True
+            
+            if front_hazard and speed > 5.0:
+                 control.throttle = 0.0
+                 control.brake = 1.0
+                 self.vehicle.apply_control(control)
+                 # print("🚨 EMERGENCY BRAKE: Pedestrian detected!")
+
         self.obstacle_dist = 50.0 # Reset for this frame
         snapshot, *sensor_data = self.sync_manager.tick()
         
@@ -311,7 +366,22 @@ class CarlaEnv(gym.Env):
             
         info["total_interventions"] = self.safety_monitor.intervention_count
         
+        # 1A. Snapshot Recovery Trigger
         done = bool(self.collision_hist) or (self.offroad_steps > 40)
+        
+        if self.config.get("enable_rewind", False) and bool(self.collision_hist):
+            print(f"⚠️ [DEBUG] Collision detected. Rewinding to safe state. Penalty -10 applied.")
+            # Teleport to state from 20 steps ago (approx 1-2 seconds depending on FPS)
+            if len(self.state_buffer) >= 20:
+                 safe_transform, safe_velocity = self.state_buffer[-20]
+                 self.vehicle.set_transform(safe_transform)
+                 self.vehicle.set_target_velocity(safe_velocity)
+                 # Apply penalty and clear collision hist to continue
+                 self.collision_hist = []
+                 done = False # Do not end episode
+            else:
+                 print("⚠️ Cannot rewind: Buffer too small.")
+
         if self.offroad_steps > 40:
              print(f"🛑 EARLY RESET: Stuck off-road for {self.offroad_steps} steps.")
         
@@ -341,7 +411,9 @@ class CarlaEnv(gym.Env):
         
         # Semantic Segmentation Camera
         seg_cam_bp = self.blueprint_library.find('sensor.camera.semantic_segmentation')
-        seg_cam_bp.set_attribute('image_size_x', '64')
+        # 1C. Ray Scaling (Variable width)
+        width = 128 if self.config.get("ray_scale", False) else 64
+        seg_cam_bp.set_attribute('image_size_x', str(width))
         seg_cam_bp.set_attribute('image_size_y', '64')
         seg_cam_bp.set_attribute('fov', '90')
         seg_cam_transform = carla.Transform(carla.Location(x=1.6, z=1.7))
@@ -388,9 +460,6 @@ class CarlaEnv(gym.Env):
     def _process_rgb_img(self, image):
         """Standard Async Callback for RGB Camera"""
         if not self.show_display: return
-        # Debug Print (Throttle to avoid spam)
-        if self.step_count % 100 == 0:
-             print(f"📸 RGB Camera Callback! Frame: {image.frame} | Bytes: {len(image.raw_data)}")
         
         i = np.array(image.raw_data)
         # Reshape based on the dimensions set in _setup_sensors (800x600)
@@ -401,7 +470,8 @@ class CarlaEnv(gym.Env):
         """Processes semantic segmentation for the agent's 'brain'"""
         i = np.array(image.raw_data)
         # CARLA semantic image is BGRA, but A is the tag
-        i2 = i.reshape((64, 64, 4))
+        width = 128 if self.config.get("ray_scale", False) else 64
+        i2 = i.reshape((64, width, 4))
         # Mask: Road=7, RoadLine=6 in Tag (usually index 2 or 3 depending on version)
         # In CARLA 0.9.13, tags are in the Red channel? No, Tag is in Red channel.
         tags = i2[:, :, 2] # This might vary. Let's use standard mapper.
@@ -418,7 +488,10 @@ class CarlaEnv(gym.Env):
         for tag in hazards:
             labeled[tags == tag] = 80  # Hazard
             
-        self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, 64)
+        # 1E. Pedestrian Detection (Tag 4)
+        labeled[tags == 4] = 40 # Specific Pedestrian Marker
+            
+        self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, width)
         
     def _on_obstacle(self, event):
         if self.vehicle is None or not self.vehicle.is_alive: return 
@@ -433,6 +506,12 @@ class CarlaEnv(gym.Env):
         # [12-43]: LIDAR 32-Sector Distances
         
         obs = np.zeros(44, dtype=np.float32)
+        
+        # 1C. Ray Scaling (MaxPooling from 128 to 32)
+        ray_scale_active = self.config.get("ray_scale", False)
+        radar_input_width = 128 if ray_scale_active else 64
+        kernel_size = 4 if ray_scale_active else 2
+        
         # Image is updated asynchronously via _process_rgb_img
         
         # 1. Navigation State
@@ -464,22 +543,27 @@ class CarlaEnv(gym.Env):
         # This gives the agent 'vision' of where poles/walls are
         radar_vec = np.ones(32, dtype=np.float32)
         if hasattr(self, 'latest_semantic'):
-            sem = self.latest_semantic[0] # (64, 64)
+            sem = self.latest_semantic[0] # (64, width)
             # Map hazard tags to proximity
             # We only look at the bottom 2/3 of the image (closest to car)
             for sector in range(32):
-                col_start = sector * 2
-                col_end = col_start + 2
-                # Look for pixels with value 80 (Hazard) or 128 (Sidewalk)
-                # Find the 'highest' row (closest to car bottom) with a hazard
-                hazard_mask = (sem[:, col_start:col_end] == 80) | (sem[:, col_start:col_end] == 128)
+                col_start = sector * kernel_size
+                col_end = col_start + kernel_size
+                # Look for pixels with value 80 (Hazard), 128 (Sidewalk), or 40 (Pedestrian)
+                hazard_mask = (sem[:, col_start:col_end] == 80) | (sem[:, col_start:col_end] == 128) | (sem[:, col_start:col_end] == 40)
                 rows = np.where(hazard_mask)[0]
                 if len(rows) > 0:
                     # Row 63 is the very bottom (closest)
                     closest_row = np.max(rows)
-                    # Normalize: 0.0 at bottom (colliding), 1.0 at distance
-                    proximity = 1.0 - (closest_row / 63.0)
-                    radar_vec[sector] = proximity
+                    
+                    # Pedestrian awareness (Prompt 2: set to -1.0 if Pedestrian)
+                    pedestrian_mask = (sem[closest_row, col_start:col_end] == 40)
+                    if np.any(pedestrian_mask):
+                        radar_vec[sector] = -1.0
+                    else:
+                        # Normalize: 0.0 at bottom (colliding), 1.0 at distance
+                        proximity = 1.0 - (closest_row / 63.0)
+                        radar_vec[sector] = proximity
         
         obs[12:] = radar_vec
 
@@ -540,6 +624,28 @@ class CarlaEnv(gym.Env):
         r += r_align
         info["reward_align"] = float(r_align)
 
+        # 1B. Look-Ahead Waypoint Reward
+        vehicle_loc = self.vehicle.get_location()
+        if self.config.get("enable_lookahead_reward", True):
+             # Extract waypoint 5 meters ahead
+             next_wps = waypoint.next(5.0)
+             if next_wps:
+                 next_wp = next_wps[0]
+                 wp_transform = next_wp.transform
+                 wp_loc = wp_transform.location
+                 
+                 # Vector from car to waypoint
+                 vec_to_wp = carla.Location(x=wp_loc.x - vehicle_loc.x, y=wp_loc.y - vehicle_loc.y)
+                 norm = np.sqrt(vec_to_wp.x**2 + vec_to_wp.y**2 + 1e-6)
+                 vec_to_wp.x /= norm
+                 vec_to_wp.y /= norm
+                 
+                 # Dot product with forward vector
+                 dot_product = vehicle_fwd.x * vec_to_wp.x + vehicle_fwd.y * vec_to_wp.y
+                 r_lookahead = (speed / 10.0) * dot_product # Scale with speed
+                 r += r_lookahead
+                 info["reward_lookahead"] = float(r_lookahead)
+
         # 4. LATERAL VELOCITY PENALTY (Stability Focus)
         lat_vel = abs(v.x * road_right.x + v.y * road_right.y) * 3.6 
         
@@ -554,7 +660,6 @@ class CarlaEnv(gym.Env):
         info["penalty_stability"] = float(r_stability)
         
         # 4. SPEED-SCALED LANE DISCIPLINE (Linear for easier learning)
-        vehicle_loc = self.vehicle.get_location()
         lane_center = waypoint.transform.location
         to_vehicle = carla.Vector3D(vehicle_loc.x - lane_center.x, vehicle_loc.y - lane_center.y, 0)
         lateral_dist = abs(to_vehicle.x * road_right.x + to_vehicle.y * road_right.y)
@@ -581,15 +686,25 @@ class CarlaEnv(gym.Env):
         tl_state = "Green"
         control = self.vehicle.get_control()
         traffic_light = self.vehicle.get_traffic_light()
-        if traffic_light and traffic_light.get_state() == carla.TrafficLightState.Red:
-            tl_state = "Red"
-            if speed > 2.0:
-                r -= 5.0
-                info["penalty_red_light"] = -5.0
-            elif speed <= 2.0 and control.brake > 0.1:
-                # Reward for successfully stopping at red
-                r += 0.5
-                info["reward_red_stop"] = 0.5
+        
+        if traffic_light:
+            state = traffic_light.get_state()
+            if state == carla.TrafficLightState.Red:
+                tl_state = "Red"
+                # 1D. Refined Red Light Penalty
+                if speed > 0.1:
+                    r -= 20.0
+                    info["penalty_red_light"] = -20.0
+                elif speed <= 2.0 and control.brake > 0.1:
+                    # Reward for successfully stopping at red
+                    r += 0.5
+                    info["reward_red_stop"] = 0.5
+            elif state == carla.TrafficLightState.Green:
+                # 1F. Mastery tracking (3 green lights)
+                if self.last_red_light_id != traffic_light.id:
+                    self.green_light_passes += 1
+                    self.last_red_light_id = traffic_light.id
+                    # print(f"🚦 Green light passed! Counter: {self.green_light_passes}")
                 
         # 6. Proximity Penalty (Proactive Obstacle Avoidance)
         # We use the radar data from _get_obs (implicitly via the observation vector, 
@@ -611,6 +726,23 @@ class CarlaEnv(gym.Env):
         
         r += r_proximity
         info["penalty_proximity"] = float(r_proximity)
+
+        # 1E. Pedestrian Safety Bonus/Penalty
+        r_pedestrian = 0.0
+        if hasattr(self, 'latest_semantic'):
+            sem = self.latest_semantic[0]
+            # Detect close pedestrian (Tag 40)
+            if np.any(sem[50:, :] == 40):
+                 r_pedestrian = -50.0 # Heavy legal penalty
+                 # Mark for backtrack if collision occurs (handled in collision hist)
+                 if bool(self.collision_hist):
+                      # Check if collision was with a pedestrian
+                      for event in self.collision_hist:
+                           if 'walker' in event.other_actor.type_id:
+                                self.pedestrian_collision = True
+        
+        r += r_pedestrian
+        info["penalty_pedestrian"] = float(r_pedestrian)
 
         # 7. Reverse Penalty (Discourage unless needed for recovery)
         r_reverse = -0.2 if control.reverse else 0.0
