@@ -1,12 +1,17 @@
-print("🚀 ROBUST TRAINING MODE ACTIVE", flush=True)
+import numpy as np
 import os
 import sys
 import torch
-import numpy as np
 import time
 import gc
-from agent_logic import get_ppo_agent
-from stable_baselines3 import PPO
+
+torch.set_num_threads(1)
+try:
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
+from agent_logic import get_sac_agent
+from stable_baselines3 import SAC
 from stable_baselines3.common.callbacks import CheckpointCallback, BaseCallback
 from metrics_logger import TransparencyCallback
 
@@ -133,6 +138,7 @@ def train():
 
             # 2. Initialize CARLA Environment
             print(f"🚀 Initializing Environment...", flush=True)
+            stage["show_display"] = False
             env_raw = make_env(stage)
             
             # Manual wrapping for stability and visibility
@@ -140,8 +146,8 @@ def train():
             from stable_baselines3.common.vec_env import DummyVecEnv
             
             print("📦 Wrapping Environment (Monitor + DummyVecEnv)...", flush=True)
-            env = Monitor(env_raw)
-            env = DummyVecEnv([lambda: env])
+            env_wrapped = Monitor(env_raw)
+            env = DummyVecEnv([lambda: env_wrapped])
             print("✅ Environment Wrapped.", flush=True)
             
             # 3. Finalize Model with Env
@@ -150,21 +156,21 @@ def train():
                     # Priority 1: Mapped weights (.pth)
                     if os.path.exists("models/bc_mapped_weights.pth"):
                         print(f"🧠 Loading BC Mapped weights from models/bc_mapped_weights.pth...")
-                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                        model = get_sac_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
                         model.policy.load_state_dict(torch.load("models/bc_mapped_weights.pth", map_location=device), strict=False)
                         print("✅ Mapped weights loaded successfully.")
                     # Priority 2: Full Baseline Zip
                     elif os.path.exists("models/ppo_bc_baseline.zip"):
                         print(f"🧠 Loading BC Bootstrap weights from models/ppo_bc_baseline.zip...")
                         try:
-                            model = PPO.load("models/ppo_bc_baseline.zip", env=env, device=device)
+                            model = SAC.load("models/ppo_bc_baseline.zip", env=env, device=device)
                             print(f"✅ Model loaded directly to {device} and attached to environment.", flush=True)
                         except Exception as e:
                             print(f"⚠️ Warning: Failed to load baseline ({e}). Initializing fresh agent instead.")
-                            model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                            model = get_sac_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
                     else:
-                        print(f"🆕 Initializing fresh PPO agent (Debug: {args.debug})...")
-                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                        print(f"🆕 Initializing fresh SAC agent (Debug: {args.debug})...")
+                        model = get_sac_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
                 else:
                     # Regular resume logic or fresh initialization if no previous stage found
                     # Look for model from previous stage (we already found path in step 1 potentially)
@@ -175,10 +181,10 @@ def train():
                     
                     if os.path.exists(prev_model_path):
                         print(f"🔄 Resuming from Stage {prev_stage}: {prev_model_path}")
-                        model = PPO.load(prev_model_path, env=env, device=device)
+                        model = SAC.load(prev_model_path, env=env, device=device)
                     else:
-                        print(f"🆕 No previous stage model found. Initializing fresh PPO agent (Debug: {args.debug})...")
-                        model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
+                        print(f"🆕 No previous stage model found. Initializing fresh SAC agent (Debug: {args.debug})...")
+                        model = get_sac_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard", debug=args.debug)
             else:
                 print("✅ Setting environment for loaded model...")
                 model.set_env(env)
@@ -203,46 +209,20 @@ def train():
             mastery_callback = MasteryBacktrackCallback(output_dir)
             
             # Train
-            # Train loop with TQDM for stability (avoids Rich/sys.meta_path crash)
-            from tqdm import tqdm
+            # Train directly (Avoid custom TQDM loop conflicts)
             print(f"Training Stage {args.stage} (Goal: {stage['threshold']} reward)...", flush=True)
             
             # Get total timesteps (Override for debug)
             total_timesteps = args.steps if args.steps else stage['timesteps']
             if args.debug and not args.steps:
                 total_timesteps = 5000 # 5-min snapshot
-            
-            pbar = tqdm(total=total_timesteps, file=sys.stdout, dynamic_ncols=True)
-            current_steps = 0
-            
-            try:
-                while current_steps < total_timesteps:
-                     # Train in small chunks
-                     chunk_size = 512 if args.debug else 2048
-                     model.learn(
-                        total_timesteps=chunk_size, 
-                        callback=[checkpoint_callback, stop_callback, transparency_callback, mastery_callback], 
-                        progress_bar=False, 
-                        reset_num_timesteps=False
-                     )
-                     current_steps += chunk_size
-                     pbar.update(chunk_size)
-                     
-                     # Check for stage completion (via callback)
-                     # Access underlying CarlaEnv through DummyVecEnv -> Monitor chain
-                     is_complete = False
-                     try:
-                         # DummyVecEnv stores envs in .envs list; Monitor wraps the real env
-                         raw_env = env.envs[0].unwrapped if hasattr(env, "envs") else env.unwrapped
-                         is_complete = getattr(raw_env, "_stage_complete", False)
-                     except Exception:
-                         is_complete = False
-                         
-                     if is_complete:
-                         print(f"✅ Stage {args.stage} graduation criteria met!", flush=True)
-                         break
-            finally:
-                pbar.close()
+                
+            model.learn(
+                total_timesteps=total_timesteps, 
+                callback=[checkpoint_callback, stop_callback, transparency_callback, mastery_callback], 
+                progress_bar=False, 
+                reset_num_timesteps=False
+            )
             
             # Save Telemetry
             save_telemetry_snapshot(args.stage, transparency_callback.stats, output_dir)
@@ -264,7 +244,7 @@ def train():
                os.makedirs(output_dir, exist_ok=True)
                env = make_env(stage)
                if model is None:
-                   model = get_ppo_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
+                   model = get_sac_agent(env, device=device, tensorboard_log=f"{output_dir}/tensorboard")
                else:
                    model.set_env(env)
                    model.tensorboard_log = f"{output_dir}/tensorboard"

@@ -1,7 +1,7 @@
 #!/bin/bash
 # launch_carla.sh - Headless CARLA 0.9.13 launcher for RTX 4000
 
-CARLA_DIR="/home/tinkerspace/carla project"
+CARLA_DIR="/workspace/carla_0.9.13"
 
 echo "🚀 Launching CARLA 0.9.13 in Headless Mode..."
 echo "GPU Optimization: RTX 4000 SFF (Ada Generation)"

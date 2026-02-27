@@ -50,7 +50,7 @@ class CarlaSyncManager:
             register_event(q.put)
             self._queues.append(q)
 
-        make_queue(self.world.on_tick)
+        # Removed world.on_tick - we'll rely on frame-based sensors
         for sensor in self.sensors:
             make_queue(sensor.listen)
 
@@ -64,9 +64,10 @@ class CarlaSyncManager:
         while True:
             try:
                 data = q.get(timeout=timeout)
-                if data.frame == self.frame:
+                # WorldSnapshot uses frame, sensors use frame
+                if hasattr(data, 'frame') and data.frame == self.frame:
                     return data
-                elif data.frame > self.frame:
+                elif hasattr(data, 'frame') and data.frame > self.frame:
                     return data # Already past
             except Exception:
                 return None
@@ -100,40 +101,51 @@ class CarlaEnv(gym.Env):
     def __init__(self, config=None):
         super(CarlaEnv, self).__init__()
         self.config = config or {}
-        self.host = self.config.get("host", "127.0.0.1")
+        self.host = self.config.get("host", "0.0.0.0")
         self.port = self.config.get("port", 2000)
         self.town = self.config.get("map", "Town01")
         self.fps = self.config.get("fps", 10)
         self.width = self.config.get("width", 128)
         self.height = self.config.get("height", 128)
-        self.show_display = self.config.get("show_display", True)
+        self.show_display = self.config.get("show_display", False)
         self.headless = not self.show_display # Inferred from display flag
         
         # RL spaces: Single Input (BEV Grid)
-        self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(1, 64, 64), dtype=np.float32)
+        self.observation_space = spaces.Box(low=0, high=255, shape=(1, 64, 64), dtype=np.uint8)
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.step_count = 0
         self.prev_steer = 0.0
         self.offroad_steps = 0 # Track consecutive steps off-road
         
-        # Display settings
-        self.show_display = self.config.get("show_display", True)
         if cv2 is None:
             self.show_display = False
 
-        # CARLA initialization
-        self.client = carla.Client(self.host, self.port)
-        self.client.set_timeout(30.0)
-        
-        try:
-            current_world = self.client.get_world()
-            current_map = current_world.get_map().name
-            if self.town in current_map:
-                self.world = current_world
-            else:
-                self.world = self.client.load_world(self.town)
-        except Exception as e:
-            self.world = self.client.get_world()
+        # CARLA initialization (with retry loop for slow server startup)
+        print(f"🔌 Connecting to CARLA server at {self.host}:{self.port}...", flush=True)
+        max_retries = 10
+        self.world = None
+        for i in range(max_retries):
+            try:
+                self.client = carla.Client(self.host, self.port)
+                self.client.set_timeout(10.0) # Shorter timeout per try
+                
+                # Check connection by getting the world
+                current_world = self.client.get_world()
+                current_map = current_world.get_map().name
+                if self.town in current_map:
+                    self.world = current_world
+                else:
+                    self.world = self.client.load_world(self.town)
+                    
+                print(f"✅ Successfully connected to CARLA Server (Attempt {i+1}/{max_retries})")
+                break
+                
+            except Exception as e:
+                print(f"⏳ CARLA Server not ready yet. Retrying {i+1}/{max_retries} ({e})")
+                time.sleep(3.0)
+                
+        if self.world is None:
+            raise RuntimeError(f"❌ ERROR: Failed to connect to CARLA Server after {max_retries} retries!")
 
         self.map = self.world.get_map()
         self.blueprint_library = self.world.get_blueprint_library()
@@ -144,7 +156,7 @@ class CarlaEnv(gym.Env):
         self.sync_manager = None
         self.obstacle_dist = 50.0
         self.safety_monitor = SafetyMonitor()
-        self.latest_semantic = np.zeros((1, 64, 64), dtype=np.float32)
+        self.latest_semantic = np.zeros((1, 64, 64), dtype=np.uint8)
         self._stage_complete = False
         self.spectator = None
         
@@ -235,21 +247,30 @@ class CarlaEnv(gym.Env):
              except Exception as e:
                  print(f"⚠️ Failed to apply tire friction: {e}")
 
-        # 4. Setup sync manager
-        self.sync_manager = CarlaSyncManager(self.world, [], fps=self.fps)
-        
-        # 5. Setup sensors
+        # 4. Setup sensors (Initialize lists first)
+        self.sensors = []
         self._setup_sensors()
         
-        # 6. Update sync manager (No sensors needed for sync now)
-        self.sync_manager.sensors = [] 
-        self.sync_manager.setup_queues()
+        # 5. Setup sync manager (Only for cameras/frame-producers)
+        print("🔧 Setting up Sync Manager...", flush=True)
+        synced_sensors = []
+        if self.semantic_sensor: synced_sensors.append(self.semantic_sensor)
+        if self.show_display and self.rgb_sensor: synced_sensors.append(self.rgb_sensor)
+        
+        self.sync_manager = CarlaSyncManager(self.world, synced_sensors, fps=self.fps)
+        print("✅ Sync Manager Ready.", flush=True)
+        
+        # 6. Initial tick to populate first observation
+        print("⏲️ Performing initial sync tick...", flush=True)
         self.sync_manager.tick()
+        print("✅ Initial sync tick complete.", flush=True)
         
         # 7. Move Spectator for Visualization
+        print("🎥 Moving spectator...", flush=True)
         self._set_spectator_follow()
+        print("✅ Spectator moved.", flush=True)
         
-        print("✅ reset() returning obs", flush=True)
+        print("🏁 reset() returning obs", flush=True)
         self.collision_hist = [] # Clear history on reset
         return self._get_obs()
 
@@ -318,6 +339,9 @@ class CarlaEnv(gym.Env):
             control.brake = 0.0
             control.reverse = True
         
+        v = self.vehicle.get_velocity()
+        speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2)
+        
         self.vehicle.apply_control(control)
         
         # 1E. Damping Layer: Pedestrian Emergency Brake (Override if dangerous)
@@ -342,7 +366,7 @@ class CarlaEnv(gym.Env):
         self.prev_steer = steer
         
         self.obstacle_dist = 50.0 # Reset for this frame
-        snapshot, *sensor_data = self.sync_manager.tick()
+        sensor_data = self.sync_manager.tick()
         
         # Sync Spectator every step for smooth tracking
         self._set_spectator_follow()
@@ -428,7 +452,7 @@ class CarlaEnv(gym.Env):
             attach_to=self.vehicle,
             attachment_type=carla.AttachmentType.Rigid
         )
-        self.semantic_sensor.listen(self._process_semantic_img)
+        # self.semantic_sensor.listen(self._process_semantic_img) # Handled by SyncManager
         self.sensors.append(self.semantic_sensor)
         print(f"🚁 Local BEV Camera Attached with ID: {self.semantic_sensor.id}")
         
@@ -458,7 +482,7 @@ class CarlaEnv(gym.Env):
                 attach_to=self.vehicle,
                 attachment_type=carla.AttachmentType.Rigid
             )
-            self.rgb_sensor.listen(self._process_rgb_img)
+            # self.rgb_sensor.listen(self._process_rgb_img) # Handled by SyncManager
             self.sensors.append(self.rgb_sensor)
             print(f"📷 Visualization RGB Camera Attached ID: {self.rgb_sensor.id}")
             
@@ -499,7 +523,7 @@ class CarlaEnv(gym.Env):
         # Apply mask
         labeled = labeled * mask
         
-        self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, 64)
+        self.latest_semantic = (labeled[np.newaxis, :, :] * 255).astype(np.uint8) # (1, 64, 64)
         
     def _on_obstacle(self, event):
         if self.vehicle is None or not self.vehicle.is_alive: return 
@@ -508,7 +532,16 @@ class CarlaEnv(gym.Env):
 
     def _get_obs(self, sensor_data=None):
         # Local Semantic BEV Observation (1, 64, 64)
-        semantic = getattr(self, "latest_semantic", np.zeros((1, 64, 64), dtype=np.float32))
+        if sensor_data:
+            # First sensor is semantic (index 0)
+            if len(sensor_data) > 0 and sensor_data[0] is not None:
+                self._process_semantic_img(sensor_data[0])
+            
+            # Second is RGB (index 1) if display is on
+            if self.show_display and len(sensor_data) > 1 and sensor_data[1] is not None:
+                self._process_rgb_img(sensor_data[1])
+
+        semantic = getattr(self, "latest_semantic", np.zeros((1, 64, 64), dtype=np.uint8))
         return semantic
 
     def _compute_reward(self):
@@ -766,7 +799,6 @@ class CarlaEnv(gym.Env):
         window_name = "AGENT_PERCEPTION_FEED"
         
         # Vector Observation Visualization
-        # Use RGB Camera image if available, else black canvas
         if hasattr(self, 'latest_image') and self.latest_image is not None:
             canvas = np.ascontiguousarray(self.latest_image)
         else:
@@ -775,21 +807,27 @@ class CarlaEnv(gym.Env):
         v = self.vehicle.get_velocity()
         speed = 3.6 * np.sqrt(v.x**2 + v.y**2 + v.z**2)
         
-        # Extract vector from Dict observation
-        vector = obs["vector"] if isinstance(obs, dict) else obs
-        
         # Traffic Light
         tl_state = "Green"
-        if vector[10] < 0.2: tl_state = "Red"
-        elif vector[10] < 0.8: tl_state = "Yellow"
+        tl = self.vehicle.get_traffic_light()
+        if tl:
+            state = tl.get_state()
+            if state == carla.TrafficLightState.Red:
+                tl_state = "Red"
+            elif state == carla.TrafficLightState.Yellow:
+                tl_state = "Yellow"
+                
+        control = self.vehicle.get_control()
+        steer = control.steer
+        throttle = control.throttle
         
         cv2.putText(canvas, f"SPEED: {speed:.1f} KM/H", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
         cv2.putText(canvas, f"LIGHT: {tl_state}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-        cv2.putText(canvas, f"STEER: {vector[1]:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
-        cv2.putText(canvas, f"THROTTLE: {vector[2]:.2f}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        cv2.putText(canvas, f"STEER: {steer:.2f}", (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
+        cv2.putText(canvas, f"THROTTLE: {throttle:.2f}", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
         
         # Obstacle
-        min_obs_dist = np.min(vector[12:]) * 50.0
+        min_obs_dist = self.obstacle_dist
         cv2.putText(canvas, f"NEAREST OBS: {min_obs_dist:.1f}m", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 165, 255), 1)
 
         cv2.imshow(window_name, canvas)

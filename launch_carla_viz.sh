@@ -1,7 +1,7 @@
 #!/bin/bash
 # launch_carla_viz.sh - CARLA 0.9.13 launcher WITH Window/Rendering
 
-CARLA_DIR="/home/tinkerspace/carla project"
+CARLA_DIR="/workspace/carla_0.9.13"
 
 echo "🚀 Launching CARLA 0.9.13 with Visualization..."
 echo "GPU Optimization: RTX 4000 SFF (Ada Generation)"

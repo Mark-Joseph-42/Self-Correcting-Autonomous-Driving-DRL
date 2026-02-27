@@ -5,7 +5,8 @@ from agent_logic import load_agent
 
 import argparse
 import gym
-from stable_baselines3 import PPO
+import glob
+from stable_baselines3 import SAC
 
 def test():
     """
@@ -14,6 +15,8 @@ def test():
     parser = argparse.ArgumentParser(description="Run inference with a trained agent.")
     parser.add_argument("--model", type=str, help="Path to the .zip model file")
     parser.add_argument("--stage", type=int, default=1, help="Curriculum stage to simulate (1-5)")
+    parser.add_argument("--debug", action="store_true", help="Enable debug outputs")
+    parser.add_argument("--viz", action="store_true", help="Enable visual display")
     args = parser.parse_args()
 
     os.environ["USE_CARLA"] = "1"
@@ -22,20 +25,24 @@ def test():
     model_path = args.model or os.environ.get("TEST_MODEL_PATH")
     
     if not model_path:
-        # Search defaults based on stage
-        default_path = f"outputs/stage_{args.stage}/final_model_stage_{args.stage}.zip"
-        if os.path.exists(default_path):
-            model_path = default_path
+        # Search checkpoints first
+        checkpoints = glob.glob("outputs/debug/stage_1/checkpoints/*.zip")
+        if checkpoints:
+            model_path = max(checkpoints, key=os.path.getmtime)
         else:
-            # Fallback search
-            print(f"⚠️  {default_path} not found. Searching generally...")
-            import glob
-            zips = glob.glob("outputs/**/*.zip", recursive=True)
-            if zips:
-                model_path = max(zips, key=os.path.getmtime)
+            # Search defaults based on stage
+            default_path = f"outputs/stage_{args.stage}/final_model_stage_{args.stage}.zip"
+            if os.path.exists(default_path):
+                model_path = default_path
             else:
-                print("❌ No trained CARLA model found.")
-                return
+                # Fallback search
+                print(f"⚠️  {default_path} not found. Searching generally...")
+                zips = glob.glob("outputs/**/*.zip", recursive=True)
+                if zips:
+                    model_path = max(zips, key=os.path.getmtime)
+                else:
+                    print("❌ No trained CARLA model found.")
+                    return
 
     print(f"📡 Loading agent from {model_path}...")
     
@@ -51,14 +58,15 @@ def test():
         # Stage is 1-indexed in args, 0-indexed in list
         stage_config = stages[args.stage - 1]
         
+        # Override show_display based on --viz
+        stage_config["show_display"] = args.viz
+        
         print(f"🌍 Loading Environment for Stage {args.stage}: {stage_config['name']} (Map: {stage_config['map']})")
         
         env = make_carla_env(stage_config)
         
         # Load agent
-        # We need to manually load because we might have different internal structures
-        # handled by SB3's load
-        model = PPO.load(model_path, env=env)
+        model = SAC.load(model_path, env=env)
         
     except Exception as e:
         print(f"❌ Load failed: {e}")
