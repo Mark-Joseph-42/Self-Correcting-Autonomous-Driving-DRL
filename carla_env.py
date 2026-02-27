@@ -109,12 +109,8 @@ class CarlaEnv(gym.Env):
         self.show_display = self.config.get("show_display", True)
         self.headless = not self.show_display # Inferred from display flag
         
-        # RL spaces: MultiInput (Image + Vector)
-        width = 128 if self.config.get("ray_scale", False) else 64
-        self.observation_space = spaces.Dict({
-            "semantic": spaces.Box(low=0.0, high=1.0, shape=(1, 64, width), dtype=np.float32),
-            "vector": spaces.Box(low=-np.inf, high=np.inf, shape=(44,), dtype=np.float32)
-        })
+        # RL spaces: Single Input (BEV Grid)
+        self.observation_space = spaces.Box(low=0.0, high=1.0, shape=(1, 64, 64), dtype=np.float32)
         self.action_space = spaces.Box(low=-1.0, high=1.0, shape=(2,), dtype=np.float32)
         self.step_count = 0
         self.prev_steer = 0.0
@@ -148,8 +144,7 @@ class CarlaEnv(gym.Env):
         self.sync_manager = None
         self.obstacle_dist = 50.0
         self.safety_monitor = SafetyMonitor()
-        width = 128 if self.config.get("ray_scale", False) else 64
-        self.latest_semantic = np.zeros((1, 64, width), dtype=np.uint8)
+        self.latest_semantic = np.zeros((1, 64, 64), dtype=np.float32)
         self._stage_complete = False
         self.spectator = None
         
@@ -325,22 +320,27 @@ class CarlaEnv(gym.Env):
         
         self.vehicle.apply_control(control)
         
-        # 1E. Pedestrian Emergency Brake (Override if dangerous)
+        # 1E. Damping Layer: Pedestrian Emergency Brake (Override if dangerous)
+        # Search for pedestrian (value 0.5 in our mapped BEV grid) in the immediate front zone (5m x 2m)
+        # 1px = ~0.3125m. 5m = ~16px. 2m = ~6.4px (round to 6: 3px each side of center).
+        # BEV Center is (31.5, 31.5). Front zone is rows ~16 to 31, cols 28 to 34.
         if self.config.get("enable_pedestrian_safety", True):
             front_hazard = False
             if hasattr(self, 'latest_semantic'):
-                sem = self.latest_semantic[0]
-                # Look for Pedestrian Tag (40 in our mapping) in front central sectors
-                pedestrian_mask = (sem[40:, 24:40] == 40)
-                if np.any(pedestrian_mask):
+                sem = self.latest_semantic[0] # (64, 64) grid
+                front_zone = sem[16:32, 28:35]
+                if np.any(front_zone == 0.5): # Pedestrian value
                     front_hazard = True
             
-            if front_hazard and speed > 5.0:
+            if front_hazard and speed > 1.0:
                  control.throttle = 0.0
                  control.brake = 1.0
                  self.vehicle.apply_control(control)
-                 # print("🚨 EMERGENCY BRAKE: Pedestrian detected!")
+                 # print("🚨 DAMPING LAYER: Pedestrian detected in front zone!")
 
+        # Save previous steer for jitter penalty
+        self.prev_steer = steer
+        
         self.obstacle_dist = 50.0 # Reset for this frame
         snapshot, *sensor_data = self.sync_manager.tick()
         
@@ -366,25 +366,27 @@ class CarlaEnv(gym.Env):
             
         info["total_interventions"] = self.safety_monitor.intervention_count
         
-        # 1A. Snapshot Recovery Trigger
+        # Termination conditions
         done = bool(self.collision_hist) or (self.offroad_steps > 40)
         
+        # Mastery-Backtrack: Only for Stage-Ending failures (e.g., Pedestrian Collision after success)
+        # Stage-Ending defined heuristically: Route almost done (>90%) but collided with a pedestrian
         if self.config.get("enable_rewind", False) and bool(self.collision_hist):
-            print(f"⚠️ [DEBUG] Collision detected. Rewinding to safe state. Penalty -10 applied.")
-            # Teleport to state from 20 steps ago (approx 1-2 seconds depending on FPS)
-            if len(self.state_buffer) >= 20:
-                 safe_transform, safe_velocity = self.state_buffer[-20]
-                 self.vehicle.set_transform(safe_transform)
-                 self.vehicle.set_target_velocity(safe_velocity)
-                 # Apply penalty and clear collision hist to continue
-                 self.collision_hist = []
-                 done = False # Do not end episode
-            else:
-                 print("⚠️ Cannot rewind: Buffer too small.")
-
+            is_stage_ending_failure = (info.get("reward_route", 0) > 0.9) and self.pedestrian_collision
+            
+            if is_stage_ending_failure:
+                print(f"⚠️ [DEBUG] Stage-Ending Collision detected. Rewinding to safe state.")
+                if len(self.state_buffer) >= 20:
+                     safe_transform, safe_velocity = self.state_buffer[-20]
+                     self.vehicle.set_transform(safe_transform)
+                     self.vehicle.set_target_velocity(safe_velocity)
+                     self.collision_hist = []
+                     done = False 
+                else:
+                     print("⚠️ Cannot rewind: Buffer too small.")
+                     
         if self.offroad_steps > 40:
-             print(f"🛑 EARLY RESET: Stuck off-road for {self.offroad_steps} steps.")
-        
+             print(f"🛑 EARLY RESET: Stuck off-road for {self.offroad_steps} steps.")        
         if info.get("reward_route", 0) > 0.9:
              self._stage_complete = True
 
@@ -409,14 +411,17 @@ class CarlaEnv(gym.Env):
         self.sensors.append(self.seg_sensor)
         print(f"📡 Obstacle Sensor Attached with ID: {self.seg_sensor.id}")
         
-        # Semantic Segmentation Camera
+        # Local Semantic BEV Camera
         seg_cam_bp = self.blueprint_library.find('sensor.camera.semantic_segmentation')
-        # 1C. Ray Scaling (Variable width)
-        width = 128 if self.config.get("ray_scale", False) else 64
-        seg_cam_bp.set_attribute('image_size_x', str(width))
+        seg_cam_bp.set_attribute('image_size_x', '64')
         seg_cam_bp.set_attribute('image_size_y', '64')
-        seg_cam_bp.set_attribute('fov', '90')
-        seg_cam_transform = carla.Transform(carla.Location(x=1.6, z=1.7))
+        # FOV calculation: to capture 20m span at 15m height.
+        # tan(FOV/2) = (10m) / 15m => FOV/2 = Math.atan(10/15) = 33.69 deg => FOV ~ 67 deg
+        seg_cam_bp.set_attribute('fov', '67')
+        seg_cam_transform = carla.Transform(
+            carla.Location(x=0.0, z=15.0), 
+            carla.Rotation(pitch=-90.0)
+        )
         self.semantic_sensor = self.world.spawn_actor(
             seg_cam_bp,
             seg_cam_transform,
@@ -425,7 +430,7 @@ class CarlaEnv(gym.Env):
         )
         self.semantic_sensor.listen(self._process_semantic_img)
         self.sensors.append(self.semantic_sensor)
-        print(f"👁️ Semantic Camera Attached with ID: {self.semantic_sensor.id}")
+        print(f"🚁 Local BEV Camera Attached with ID: {self.semantic_sensor.id}")
         
         # Collision sensor
         col_bp = self.blueprint_library.find('sensor.other.collision')
@@ -467,31 +472,34 @@ class CarlaEnv(gym.Env):
         self.latest_image = i2[:, :, :3] # BGRA -> BGR
         
     def _process_semantic_img(self, image):
-        """Processes semantic segmentation for the agent's 'brain'"""
+        """Processes Local Semantic BEV for the agent's 'brain'"""
         i = np.array(image.raw_data)
-        # CARLA semantic image is BGRA, but A is the tag
-        width = 128 if self.config.get("ray_scale", False) else 64
-        i2 = i.reshape((64, width, 4))
-        # Mask: Road=7, RoadLine=6 in Tag (usually index 2 or 3 depending on version)
-        # In CARLA 0.9.13, tags are in the Red channel? No, Tag is in Red channel.
-        tags = i2[:, :, 2] # This might vary. Let's use standard mapper.
+        # CARLA semantic image is BGRA
+        i2 = i.reshape((64, 64, 4))
+        # Tag is in Red channel for semantics usually, sometimes Green or Blue based on version.
+        # Common convention for CARLA: The Blue channel contains the semantic tag if accessed via raw_data or standard conversion.
+        # Actually in CARLA 0.9.13 `image.raw_data` of semantic_segmentation has the tag in the R channel if reshaping (B,G,R,A) -> R is index 2.
+        tags = i2[:, :, 2] 
         
-        # Standardized [0, 255] grid
-        # Tags (CARLA 0.9.13): Road=7, RoadLine=6, Sidewalk=8, Building=1, Fence=2, Pole=5, Wall=11
-        labeled = np.zeros_like(tags, dtype=np.uint8)
-        labeled[tags == 7] = 255  # Road
-        labeled[tags == 6] = 255  # Road Lines
-        labeled[tags == 8] = 128  # Sidewalk (Warning)
+        # Grid Transformation: Map Semantic IDs
+        # Road (7) -> 1.0, Vehicle (10) -> 0.8, Pedestrian (4) -> 0.5, Other -> 0.0
+        labeled = np.zeros_like(tags, dtype=np.float32)
+        labeled[tags == 7] = 1.0   # Road
+        labeled[tags == 6] = 1.0   # Road lines (treating as road for drivable area)
+        labeled[tags == 10] = 0.8  # Vehicle
+        labeled[tags == 4] = 0.5   # Pedestrian
         
-        # Hazard Tags (Avoid these!)
-        hazards = [1, 2, 5, 11]
-        for tag in hazards:
-            labeled[tags == tag] = 80  # Hazard
-            
-        # 1E. Pedestrian Detection (Tag 4)
-        labeled[tags == 4] = 40 # Specific Pedestrian Marker
-            
-        self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, width)
+        # Spatial Masking: 10m radius
+        # Center of 64x64 grid is (31.5, 31.5). 1px = 20m / 64 = 0.3125m.
+        # 10m radius = 10 / 0.3125 = 32 pixels.
+        y, x = np.ogrid[:64, :64]
+        dist_from_center = np.sqrt((x - 31.5)**2 + (y - 31.5)**2)
+        mask = dist_from_center <= 32
+        
+        # Apply mask
+        labeled = labeled * mask
+        
+        self.latest_semantic = labeled[np.newaxis, :, :] # (1, 64, 64)
         
     def _on_obstacle(self, event):
         if self.vehicle is None or not self.vehicle.is_alive: return 
@@ -499,85 +507,9 @@ class CarlaEnv(gym.Env):
         self.obstacle_dist = min(self.obstacle_dist, event.distance)
 
     def _get_obs(self, sensor_data=None):
-        # 44-DIMENSIONAL VECTOR OBSERVATION
-        # [0-9]: Navigation (Speed, Control)
-        # [10]: Traffic Light State
-        # [11]: Traffic Light Distance
-        # [12-43]: LIDAR 32-Sector Distances
-        
-        obs = np.zeros(44, dtype=np.float32)
-        
-        # 1C. Ray Scaling (MaxPooling from 128 to 32)
-        ray_scale_active = self.config.get("ray_scale", False)
-        radar_input_width = 128 if ray_scale_active else 64
-        kernel_size = 4 if ray_scale_active else 2
-        
-        # Image is updated asynchronously via _process_rgb_img
-        
-        # 1. Navigation State
-        if self.vehicle:
-            v = self.vehicle.get_velocity()
-            speed = np.sqrt(v.x**2 + v.y**2 + v.z**2)
-            obs[0] = np.clip(np.nan_to_num(speed / 20.0), 0.0, 5.0)
-            obs[1] = np.clip(np.nan_to_num(self.vehicle.get_control().steer), -1.0, 1.0)
-            obs[2] = np.clip(np.nan_to_num(self.vehicle.get_control().throttle), 0.0, 1.0)
-            
-            # 2. Traffic Light (Phase 3B)
-            tl = self.vehicle.get_traffic_light()
-            if tl:
-                state = tl.get_state()
-                if state == carla.TrafficLightState.Red: obs[10] = 0.0
-                elif state == carla.TrafficLightState.Yellow: obs[10] = 0.5
-                else: obs[10] = 1.0 # Green
-                
-                # Distance
-                # trigger_volume_extent = tl.get_trigger_volume().extent
-                # Simple dist:
-                # obs[11] = dist_normalized 
-                obs[11] = 1.0 # Placeholder for now, assume close if affected
-            else:
-                obs[10] = 1.0 # Green by default
-                
-        # 3. Virtual Radar (Directional Obstacle Awareness)
-        # We fill 32 sectors [12-43] based on the semantic image
-        # This gives the agent 'vision' of where poles/walls are
-        radar_vec = np.ones(32, dtype=np.float32)
-        if hasattr(self, 'latest_semantic'):
-            sem = self.latest_semantic[0] # (64, width)
-            # Map hazard tags to proximity
-            # We only look at the bottom 2/3 of the image (closest to car)
-            for sector in range(32):
-                col_start = sector * kernel_size
-                col_end = col_start + kernel_size
-                # Look for pixels with value 80 (Hazard), 128 (Sidewalk), or 40 (Pedestrian)
-                hazard_mask = (sem[:, col_start:col_end] == 80) | (sem[:, col_start:col_end] == 128) | (sem[:, col_start:col_end] == 40)
-                rows = np.where(hazard_mask)[0]
-                if len(rows) > 0:
-                    # Row 63 is the very bottom (closest)
-                    closest_row = np.max(rows)
-                    
-                    # Pedestrian awareness (Prompt 2: set to -1.0 if Pedestrian)
-                    pedestrian_mask = (sem[closest_row, col_start:col_end] == 40)
-                    if np.any(pedestrian_mask):
-                        radar_vec[sector] = -1.0
-                    else:
-                        # Normalize: 0.0 at bottom (colliding), 1.0 at distance
-                        proximity = 1.0 - (closest_row / 63.0)
-                        radar_vec[sector] = proximity
-        
-        obs[12:] = radar_vec
-
-        # 4. Speed Limit (NEW)
-        speed_limit = self.vehicle.get_speed_limit() if self.vehicle else 30.0
-        obs[9] = np.clip(speed_limit / 120.0, 0.0, 1.0)
-
-        # Return as Dict
-        semantic = getattr(self, "latest_semantic", np.zeros((1, 64, 64), dtype=np.uint8))
-        
-        # Normalize to float32 [0, 1] to ensure NNPack compatibility and stable optimization
-        semantic_float = semantic.astype(np.float32) / 255.0
-        
-        return {"semantic": semantic_float, "vector": obs}
+        # Local Semantic BEV Observation (1, 64, 64)
+        semantic = getattr(self, "latest_semantic", np.zeros((1, 64, 64), dtype=np.float32))
+        return semantic
 
     def _compute_reward(self):
         """
@@ -600,9 +532,16 @@ class CarlaEnv(gym.Env):
         # 2. Dense Movement Reward
         r_movement = 0.02 * min(speed, 50.0)
         
-        r += max(-1.0, min(1.0, r_speed)) + r_movement
+        # Continuity Penalty (Jitter)
+        current_steer = self.vehicle.get_control().steer
+        r_jitter = 0.0
+        if abs(current_steer - self.prev_steer) > 0.2:
+            r_jitter = -0.5 * abs(current_steer - self.prev_steer)
+            
+        r += max(-1.0, min(1.0, r_speed)) + r_movement + r_jitter
         info["reward_speed"] = float(np.nan_to_num(r_speed))
         info["reward_movement"] = float(np.nan_to_num(r_movement))
+        info["penalty_jitter"] = float(r_jitter)
         
         # Get Waypoint Info
         waypoint = self.world.get_map().get_waypoint(
@@ -706,33 +645,33 @@ class CarlaEnv(gym.Env):
                     self.last_red_light_id = traffic_light.id
                     # print(f"🚦 Green light passed! Counter: {self.green_light_passes}")
                 
-        # 6. Proximity Penalty (Proactive Obstacle Avoidance)
-        # We use the radar data from _get_obs (implicitly via the observation vector, 
-        # but for reward we can just look at the last calculated proximity)
-        r_proximity = 0.0
+        # 6. Spatial Reward (Distance to Road Edge via BEV)
+        # BEV maps Road=1.0. We want to reward staying central on the road and penalize getting close to edges (0.0).
+        r_spatial = 0.0
         if hasattr(self, 'latest_semantic'):
-            # Look at the 'front' sectors (e.g. sectors 8-24)
-            # Find closest hazard proximity (0.0=colliding, 1.0=clear)
             sem = self.latest_semantic[0]
-            hazard_mask = (sem[40:, 16:48] == 80) | (sem[40:, 16:48] == 128)
-            rows = np.where(hazard_mask)[0]
-            if len(rows) > 0:
-                # If hazards are in the bottom part of the image
-                closest_row = np.max(rows)
-                # If row is > 45 (approx 3-5 meters), start penalizing
-                if closest_row > 45:
-                    proximity_factor = (closest_row - 45) / (63 - 45)
-                    r_proximity = -1.0 * proximity_factor
+            # Define "Immediate Forward Path": A wedge or rectangle in front of the car
+            # Rows 16 to 31 (front 5m approx), Cols 24 to 40 (center ~5m wide)
+            forward_path = sem[16:32, 24:40]
+            # Calculate ratio of road pixels in the forward path
+            road_ratio = np.sum(forward_path == 1.0) / forward_path.size
+            
+            # Reward high road ratio, penalize low road ratio (getting close to edge/off-road)
+            if road_ratio < 0.8:
+                r_spatial = -1.0 * (0.8 - road_ratio)
+            else:
+                r_spatial = 0.2 * road_ratio # Small bonus for clear path
         
-        r += r_proximity
-        info["penalty_proximity"] = float(r_proximity)
+        r += r_spatial
+        info["reward_spatial"] = float(r_spatial)
 
         # 1E. Pedestrian Safety Bonus/Penalty
         r_pedestrian = 0.0
         if hasattr(self, 'latest_semantic'):
             sem = self.latest_semantic[0]
-            # Detect close pedestrian (Tag 40)
-            if np.any(sem[50:, :] == 40):
+            # Detect close pedestrian (Value 0.5) in the BEV map
+            # Central front area
+            if np.any(sem[16:36, 20:44] == 0.5):
                  r_pedestrian = -50.0 # Heavy legal penalty
                  # Mark for backtrack if collision occurs (handled in collision hist)
                  if bool(self.collision_hist):
