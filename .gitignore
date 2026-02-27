@@ -1,0 +1,19 @@
+# Training & Model Bloat
+outputs/
+**/checkpoints/
+**/tensorboard/
+*.pth
+*.onnx
+
+# Data & Binaries
+data/
+*.zip
+*.tar.gz
+*.csv
+carla_0.9.13/
+
+# System & Environment
+__pycache__/
+.DS_Store
+.venv/
+.ipynb_checkpoints/

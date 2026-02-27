@@ -1,0 +1,7 @@
+metadrive-simulator==0.3.0.1
+panda3d==1.10.13
+panda3d-simplepbr==0.11.2
+numpy<=1.24.2
+pandas<2.0.0
+stable-baselines3[extra]
+shimmy
