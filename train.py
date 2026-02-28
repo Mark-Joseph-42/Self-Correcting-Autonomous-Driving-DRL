@@ -41,17 +41,9 @@ class MasteryBacktrackCallback(BaseCallback):
         # 2. Backtrack Check (Pedestrian Hit)
         if hasattr(env, "pedestrian_collision") and env.pedestrian_collision:
             if os.path.exists(self.mastery_path):
-                 print(f"🚨 BACKTRACK: Pedestrian hit! Reloading last mastery checkpoint...")
-                 # Set the model state to the saved one
-                 # This is tricky in SB3 middle of learn(). 
-                 # Usually better to teleport vehicle and reset env, but prompt says "reload checkpoint".
-                 # We'll use load_parameters for in-place update if possible, or just teleport.
-                 # Teleport is safer for stability.
-                 env.reset() # This will teleport back to spawn and reset flags
-                 # If we wanted to reload weights, we'd do self.model.set_parameters()
+                 print(f"🚨 BACKTRACK: Pedestrian hit! Model Vectorized env will handle reset...")
             else:
-                 print("🚨 BACKTRACK FAILURE: No mastery checkpoint found. Resetting env.")
-                 env.reset()
+                 print("🚨 BACKTRACK FAILURE: No mastery checkpoint found. Environment handles reset.")
             
             env.pedestrian_collision = False
         return True

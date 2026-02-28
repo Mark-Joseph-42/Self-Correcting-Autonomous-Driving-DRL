@@ -24,7 +24,7 @@ except ImportError:
 
 class CarlaSyncManager:
     """Manages synchronous sensor data collection for CARLA 0.9.13"""
-    def __init__(self, world, sensors, fps=10):
+    def __init__(self, world, sensors, fps=20):
         self.world = world
         self.sensors = sensors
         self.delta_seconds = 1.0 / fps
@@ -104,7 +104,7 @@ class CarlaEnv(gym.Env):
         self.host = self.config.get("host", "0.0.0.0")
         self.port = self.config.get("port", 2000)
         self.town = self.config.get("map", "Town01")
-        self.fps = self.config.get("fps", 10)
+        self.fps = self.config.get("fps", 20)
         self.width = self.config.get("width", 128)
         self.height = self.config.get("height", 128)
         self.show_display = self.config.get("show_display", False)
@@ -393,21 +393,7 @@ class CarlaEnv(gym.Env):
         # Termination conditions
         done = bool(self.collision_hist) or (self.offroad_steps > 40)
         
-        # Mastery-Backtrack: Only for Stage-Ending failures (e.g., Pedestrian Collision after success)
-        # Stage-Ending defined heuristically: Route almost done (>90%) but collided with a pedestrian
-        if self.config.get("enable_rewind", False) and bool(self.collision_hist):
-            is_stage_ending_failure = (info.get("reward_route", 0) > 0.9) and self.pedestrian_collision
-            
-            if is_stage_ending_failure:
-                print(f"⚠️ [DEBUG] Stage-Ending Collision detected. Rewinding to safe state.")
-                if len(self.state_buffer) >= 20:
-                     safe_transform, safe_velocity = self.state_buffer[-20]
-                     self.vehicle.set_transform(safe_transform)
-                     self.vehicle.set_target_velocity(safe_velocity)
-                     self.collision_hist = []
-                     done = False 
-                else:
-                     print("⚠️ Cannot rewind: Buffer too small.")
+        # Mastery-Backtrack has been disabled. Pedestrian collision applied -50 penalty and done=True.
                      
         if self.offroad_steps > 40:
              print(f"🛑 EARLY RESET: Stuck off-road for {self.offroad_steps} steps.")        

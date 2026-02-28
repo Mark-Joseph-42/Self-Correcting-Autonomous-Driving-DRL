@@ -68,7 +68,7 @@ def get_carla_curriculum_config():
             "spawn_offset_range": 1.5,
             "weather": "ClearNoon",
             "threshold": 200.0,
-            "timesteps": 50000,
+            "timesteps": 100000,
             "fixed_spawn_idx": 0,
             "enable_lookahead_reward": True,
             "enable_pedestrian_safety": False,
@@ -83,7 +83,7 @@ def get_carla_curriculum_config():
             "spawn_offset_range": 0.5,
             "weather": "ClearNoon",
             "threshold": 300.0,
-            "timesteps": 75000,
+            "timesteps": 150000,
             "enable_lookahead_reward": True,
             "enable_pedestrian_safety": True,
             "ray_scale": False,
@@ -95,7 +95,7 @@ def get_carla_curriculum_config():
             "traffic_density": 0.2,
             "weather": "ClearNoon",
             "threshold": 400.0,
-            "timesteps": 100000,
+            "timesteps": 200000,
             "enable_lookahead_reward": False,
             "enable_pedestrian_safety": True,
             "ray_scale": False,
@@ -107,7 +107,7 @@ def get_carla_curriculum_config():
             "traffic_density": 0.2,
             "weather": "Rain",
             "threshold": 500.0,
-            "timesteps": 100000,
+            "timesteps": 200000,
             "enable_lookahead_reward": False,
             "enable_pedestrian_safety": True,
             "ray_scale": False,
@@ -120,10 +120,10 @@ def get_carla_curriculum_config():
             "traffic_density": 0.4,
             "weather": "dynamic",
             "threshold": 600.0,
-            "timesteps": 150000,
+            "timesteps": 300000,
             "enable_lookahead_reward": False,
             "enable_pedestrian_safety": True,
             "ray_scale": True,
-            "enable_rewind": True
+            "enable_rewind": False
         }
     ]

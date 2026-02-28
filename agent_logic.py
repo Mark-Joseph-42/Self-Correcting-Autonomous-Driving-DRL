@@ -16,10 +16,10 @@ def get_sac_agent(env, device="cpu", tensorboard_log="./logs/training", debug=Fa
         learning_rate=learning_rate, 
         buffer_size=100000,
         learning_starts=1000,
-        batch_size=256 if not debug else 128,
+        batch_size=1024 if not debug else 128,
         ent_coef='auto',
-        train_freq=1,
-        gradient_steps=1,
+        train_freq=(10, 'step'),
+        gradient_steps=5,
         device=device,
         verbose=1,
         tensorboard_log=tensorboard_log
