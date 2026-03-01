@@ -1,0 +1,19 @@
+# Environment
+.venv/
+.venv-backups/
+miniconda/
+Miniconda3-latest-Linux-x86_64.sh
+
+# CARLA Binaries (Excluded for Git)
+carla_0.9.13/
+libs/
+
+# Logs & Temp
+*.log
+carla_log.txt
+__pycache__/
+*.pyc
+
+# results and checkpoints are INCLUDED for this branch
+# !results/
+# !checkpoints/
