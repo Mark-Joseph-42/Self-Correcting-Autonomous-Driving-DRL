@@ -6,9 +6,12 @@ __pycache__/
 *.pyc
 
 # Heavy training artifacts (keep code and final results)
-models/*.zip
-logs/*.csv
-training.log
+# Only exclude temporary step checkpoints, keep final and specific stage models
+# models/sac_cl_step*.zip
+# models/sac_drl_step*.zip
+
+# logs/
+# training.log
 
 # IDE / System
 .vscode/

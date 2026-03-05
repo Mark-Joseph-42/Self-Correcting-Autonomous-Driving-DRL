@@ -1,0 +1,2531 @@
+nohup: ignoring input
+=== CL TRAINING (SPEED MODE) ===
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:235: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:305: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+Loading map Town01...
+Using cuda device
+Wrapping the env in a DummyVecEnv.
+--- Stage 1: Town01 (10k steps) ---
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 296      |
+|    ep_rew_mean     | -99.8    |
+| time/              |          |
+|    episodes        | 4        |
+|    fps             | 46       |
+|    time_elapsed    | 25       |
+|    total_timesteps | 1183     |
+| train/             |          |
+|    actor_loss      | -4.38    |
+|    critic_loss     | 0.624    |
+|    ent_coef        | 0.817    |
+|    ent_coef_loss   | -0.64    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 682      |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 181      |
+|    ep_rew_mean     | -31.6    |
+| time/              |          |
+|    episodes        | 8        |
+|    fps             | 42       |
+|    time_elapsed    | 34       |
+|    total_timesteps | 1445     |
+| train/             |          |
+|    actor_loss      | -5.36    |
+|    critic_loss     | 2.82     |
+|    ent_coef        | 0.757    |
+|    ent_coef_loss   | -0.866   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 944      |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 164      |
+|    ep_rew_mean     | -12.2    |
+| time/              |          |
+|    episodes        | 12       |
+|    fps             | 38       |
+|    time_elapsed    | 50       |
+|    total_timesteps | 1969     |
+| train/             |          |
+|    actor_loss      | -7.66    |
+|    critic_loss     | 3.97     |
+|    ent_coef        | 0.66     |
+|    ent_coef_loss   | -1.05    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1468     |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step2000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 142      |
+|    ep_rew_mean     | -15.5    |
+| time/              |          |
+|    episodes        | 16       |
+|    fps             | 37       |
+|    time_elapsed    | 60       |
+|    total_timesteps | 2267     |
+| train/             |          |
+|    actor_loss      | -7.35    |
+|    critic_loss     | 19.4     |
+|    ent_coef        | 0.615    |
+|    ent_coef_loss   | -0.853   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1766     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 128      |
+|    ep_rew_mean     | 52.1     |
+| time/              |          |
+|    episodes        | 20       |
+|    fps             | 36       |
+|    time_elapsed    | 69       |
+|    total_timesteps | 2555     |
+| train/             |          |
+|    actor_loss      | -16.5    |
+|    critic_loss     | 15.1     |
+|    ent_coef        | 0.581    |
+|    ent_coef_loss   | -0.85    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2054     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 120      |
+|    ep_rew_mean     | 99.9     |
+| time/              |          |
+|    episodes        | 24       |
+|    fps             | 36       |
+|    time_elapsed    | 79       |
+|    total_timesteps | 2885     |
+| train/             |          |
+|    actor_loss      | -22.4    |
+|    critic_loss     | 31.2     |
+|    ent_coef        | 0.55     |
+|    ent_coef_loss   | -0.685   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2384     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 113      |
+|    ep_rew_mean     | 145      |
+| time/              |          |
+|    episodes        | 28       |
+|    fps             | 35       |
+|    time_elapsed    | 89       |
+|    total_timesteps | 3177     |
+| train/             |          |
+|    actor_loss      | -29.1    |
+|    critic_loss     | 57.1     |
+|    ent_coef        | 0.526    |
+|    ent_coef_loss   | -0.542   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2676     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 111      |
+|    ep_rew_mean     | 204      |
+| time/              |          |
+|    episodes        | 32       |
+|    fps             | 35       |
+|    time_elapsed    | 101      |
+|    total_timesteps | 3548     |
+| train/             |          |
+|    actor_loss      | -41.6    |
+|    critic_loss     | 42.2     |
+|    ent_coef        | 0.501    |
+|    ent_coef_loss   | -0.443   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3047     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 108      |
+|    ep_rew_mean     | 291      |
+| time/              |          |
+|    episodes        | 36       |
+|    fps             | 34       |
+|    time_elapsed    | 112      |
+|    total_timesteps | 3906     |
+| train/             |          |
+|    actor_loss      | -51.5    |
+|    critic_loss     | 117      |
+|    ent_coef        | 0.482    |
+|    ent_coef_loss   | -0.306   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3405     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_cl_step4000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 109      |
+|    ep_rew_mean     | 345      |
+| time/              |          |
+|    episodes        | 40       |
+|    fps             | 34       |
+|    time_elapsed    | 126      |
+|    total_timesteps | 4343     |
+| train/             |          |
+|    actor_loss      | -60.6    |
+|    critic_loss     | 88.3     |
+|    ent_coef        | 0.473    |
+|    ent_coef_loss   | 0.0366   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3842     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 112      |
+|    ep_rew_mean     | 490      |
+| time/              |          |
+|    episodes        | 44       |
+|    fps             | 34       |
+|    time_elapsed    | 144      |
+|    total_timesteps | 4927     |
+| train/             |          |
+|    actor_loss      | -84.3    |
+|    critic_loss     | 225      |
+|    ent_coef        | 0.483    |
+|    ent_coef_loss   | 0.262    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 4426     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 110      |
+|    ep_rew_mean     | 534      |
+| time/              |          |
+|    episodes        | 48       |
+|    fps             | 33       |
+|    time_elapsed    | 154      |
+|    total_timesteps | 5257     |
+| train/             |          |
+|    actor_loss      | -103     |
+|    critic_loss     | 122      |
+|    ent_coef        | 0.499    |
+|    ent_coef_loss   | 0.285    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 4756     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 107      |
+|    ep_rew_mean     | 554      |
+| time/              |          |
+|    episodes        | 52       |
+|    fps             | 33       |
+|    time_elapsed    | 164      |
+|    total_timesteps | 5555     |
+| train/             |          |
+|    actor_loss      | -127     |
+|    critic_loss     | 210      |
+|    ent_coef        | 0.519    |
+|    ent_coef_loss   | 0.322    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5054     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_cl_step6000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 108      |
+|    ep_rew_mean     | 615      |
+| time/              |          |
+|    episodes        | 56       |
+|    fps             | 33       |
+|    time_elapsed    | 179      |
+|    total_timesteps | 6036     |
+| train/             |          |
+|    actor_loss      | -133     |
+|    critic_loss     | 162      |
+|    ent_coef        | 0.557    |
+|    ent_coef_loss   | 0.143    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5535     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 106      |
+|    ep_rew_mean     | 627      |
+| time/              |          |
+|    episodes        | 60       |
+|    fps             | 33       |
+|    time_elapsed    | 189      |
+|    total_timesteps | 6354     |
+| train/             |          |
+|    actor_loss      | -144     |
+|    critic_loss     | 228      |
+|    ent_coef        | 0.599    |
+|    ent_coef_loss   | 0.0982   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5853     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 104      |
+|    ep_rew_mean     | 635      |
+| time/              |          |
+|    episodes        | 64       |
+|    fps             | 33       |
+|    time_elapsed    | 198      |
+|    total_timesteps | 6653     |
+| train/             |          |
+|    actor_loss      | -153     |
+|    critic_loss     | 410      |
+|    ent_coef        | 0.64     |
+|    ent_coef_loss   | 0.0902   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 6152     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 105      |
+|    ep_rew_mean     | 690      |
+| time/              |          |
+|    episodes        | 68       |
+|    fps             | 33       |
+|    time_elapsed    | 213      |
+|    total_timesteps | 7116     |
+| train/             |          |
+|    actor_loss      | -181     |
+|    critic_loss     | 338      |
+|    ent_coef        | 0.711    |
+|    ent_coef_loss   | 0.169    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 6615     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 105      |
+|    ep_rew_mean     | 706      |
+| time/              |          |
+|    episodes        | 72       |
+|    fps             | 33       |
+|    time_elapsed    | 227      |
+|    total_timesteps | 7562     |
+| train/             |          |
+|    actor_loss      | -196     |
+|    critic_loss     | 468      |
+|    ent_coef        | 0.788    |
+|    ent_coef_loss   | 0.0787   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7061     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 104      |
+|    ep_rew_mean     | 712      |
+| time/              |          |
+|    episodes        | 76       |
+|    fps             | 33       |
+|    time_elapsed    | 238      |
+|    total_timesteps | 7929     |
+| train/             |          |
+|    actor_loss      | -202     |
+|    critic_loss     | 393      |
+|    ent_coef        | 0.848    |
+|    ent_coef_loss   | 0.072    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7428     |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step8000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 104      |
+|    ep_rew_mean     | 747      |
+| time/              |          |
+|    episodes        | 80       |
+|    fps             | 33       |
+|    time_elapsed    | 250      |
+|    total_timesteps | 8343     |
+| train/             |          |
+|    actor_loss      | -219     |
+|    critic_loss     | 373      |
+|    ent_coef        | 0.92     |
+|    ent_coef_loss   | 0.0146   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7842     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 103      |
+|    ep_rew_mean     | 745      |
+| time/              |          |
+|    episodes        | 84       |
+|    fps             | 33       |
+|    time_elapsed    | 259      |
+|    total_timesteps | 8612     |
+| train/             |          |
+|    actor_loss      | -244     |
+|    critic_loss     | 373      |
+|    ent_coef        | 0.966    |
+|    ent_coef_loss   | 0.0112   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 8111     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 102      |
+|    ep_rew_mean     | 756      |
+| time/              |          |
+|    episodes        | 88       |
+|    fps             | 33       |
+|    time_elapsed    | 270      |
+|    total_timesteps | 8987     |
+| train/             |          |
+|    actor_loss      | -257     |
+|    critic_loss     | 274      |
+|    ent_coef        | 1.03     |
+|    ent_coef_loss   | -0.00448 |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 8486     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 104      |
+|    ep_rew_mean     | 755      |
+| time/              |          |
+|    episodes        | 92       |
+|    fps             | 33       |
+|    time_elapsed    | 288      |
+|    total_timesteps | 9593     |
+| train/             |          |
+|    actor_loss      | -253     |
+|    critic_loss     | 306      |
+|    ent_coef        | 1.11     |
+|    ent_coef_loss   | -0.0106  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 9092     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_cl_step10000
+--- Stage 2: Town03 (10k steps) ---
+Loading map Town03...
+nohup: ignoring input
+=== CL TRAINING (RESUME/SPEED MODE) ===
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:235: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:305: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+--- Resuming for Stage 2: Town03 (10k steps) ---
+Resuming model from models/sac_cl_stage1.zip
+Wrapping the env in a DummyVecEnv.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 107      |
+|    ep_rew_mean     | 779      |
+| time/              |          |
+|    episodes        | 96       |
+|    fps             | 31       |
+|    time_elapsed    | 7        |
+|    total_timesteps | 10244    |
+| train/             |          |
+|    actor_loss      | -276     |
+|    critic_loss     | 1.31e+03 |
+|    ent_coef        | 1.03     |
+|    ent_coef_loss   | 0.00745  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 9743     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 105      |
+|    ep_rew_mean     | 777      |
+| time/              |          |
+|    episodes        | 100      |
+|    fps             | 32       |
+|    time_elapsed    | 15       |
+|    total_timesteps | 10501    |
+| train/             |          |
+|    actor_loss      | -288     |
+|    critic_loss     | 557      |
+|    ent_coef        | 1.04     |
+|    ent_coef_loss   | -0.0189  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 10000    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 96.4     |
+|    ep_rew_mean     | 811      |
+| time/              |          |
+|    episodes        | 104      |
+|    fps             | 33       |
+|    time_elapsed    | 24       |
+|    total_timesteps | 10828    |
+| train/             |          |
+|    actor_loss      | -298     |
+|    critic_loss     | 1.07e+03 |
+|    ent_coef        | 1.17     |
+|    ent_coef_loss   | -0.0581  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 10327    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 102      |
+|    ep_rew_mean     | 892      |
+| time/              |          |
+|    episodes        | 108      |
+|    fps             | 33       |
+|    time_elapsed    | 48       |
+|    total_timesteps | 11603    |
+| train/             |          |
+|    actor_loss      | -320     |
+|    critic_loss     | 605      |
+|    ent_coef        | 1.25     |
+|    ent_coef_loss   | 0.00667  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 11102    |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step12000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 115      |
+|    ep_rew_mean     | 1.15e+03 |
+| time/              |          |
+|    episodes        | 112      |
+|    fps             | 33       |
+|    time_elapsed    | 104      |
+|    total_timesteps | 13522    |
+| train/             |          |
+|    actor_loss      | -390     |
+|    critic_loss     | 527      |
+|    ent_coef        | 1.38     |
+|    ent_coef_loss   | -0.064   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 13021    |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step14000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 134      |
+|    ep_rew_mean     | 1.43e+03 |
+| time/              |          |
+|    episodes        | 116      |
+|    fps             | 34       |
+|    time_elapsed    | 165      |
+|    total_timesteps | 15674    |
+| train/             |          |
+|    actor_loss      | -455     |
+|    critic_loss     | 715      |
+|    ent_coef        | 1.22     |
+|    ent_coef_loss   | 0.00655  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 15173    |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step16000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 146      |
+|    ep_rew_mean     | 1.57e+03 |
+| time/              |          |
+|    episodes        | 120      |
+|    fps             | 34       |
+|    time_elapsed    | 208      |
+|    total_timesteps | 17211    |
+| train/             |          |
+|    actor_loss      | -488     |
+|    critic_loss     | 207      |
+|    ent_coef        | 1.09     |
+|    ent_coef_loss   | 0.000289 |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 16710    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_cl_step18000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+----------------------------------
+| rollout/           |           |
+|    ep_len_mean     | 162       |
+|    ep_rew_mean     | 1.75e+03  |
+| time/              |           |
+|    episodes        | 124       |
+|    fps             | 34        |
+|    time_elapsed    | 262       |
+|    total_timesteps | 19069     |
+| train/             |           |
+|    actor_loss      | -520      |
+|    critic_loss     | 731       |
+|    ent_coef        | 1.14      |
+|    ent_coef_loss   | -0.000659 |
+|    learning_rate   | 0.0003    |
+|    n_updates       | 18568     |
+----------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 163      |
+|    ep_rew_mean     | 1.77e+03 |
+| time/              |          |
+|    episodes        | 128      |
+|    fps             | 34       |
+|    time_elapsed    | 277      |
+|    total_timesteps | 19533    |
+| train/             |          |
+|    actor_loss      | -529     |
+|    critic_loss     | 557      |
+|    ent_coef        | 1.17     |
+|    ent_coef_loss   | -0.0363  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 19032    |
+---------------------------------
+  [Checkpoint] Saved models/sac_cl_step20000
+=== CL DONE ===
+=== DRL TRAINING (SPEED MODE) ===
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:235: UserWarning: [33mWARN: Box low's precision lowered by casting to float32, current low.dtype=float64[0m
+  gym.logger.warn(
+/workspace/venv/lib/python3.8/site-packages/gymnasium/spaces/box.py:305: UserWarning: [33mWARN: Box high's precision lowered by casting to float32, current high.dtype=float64[0m
+  gym.logger.warn(
+Using cuda device
+Wrapping the env in a DummyVecEnv.
+--- Full map (20k steps) ---
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 194      |
+|    ep_rew_mean     | -154     |
+| time/              |          |
+|    episodes        | 4        |
+|    fps             | 69       |
+|    time_elapsed    | 11       |
+|    total_timesteps | 778      |
+| train/             |          |
+|    actor_loss      | -2.23    |
+|    critic_loss     | 0.398    |
+|    ent_coef        | 0.921    |
+|    ent_coef_loss   | -0.273   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 277      |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 146      |
+|    ep_rew_mean     | -49.1    |
+| time/              |          |
+|    episodes        | 8        |
+|    fps             | 50       |
+|    time_elapsed    | 22       |
+|    total_timesteps | 1167     |
+| train/             |          |
+|    actor_loss      | -4.04    |
+|    critic_loss     | 0.531    |
+|    ent_coef        | 0.821    |
+|    ent_coef_loss   | -0.626   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 666      |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 128      |
+|    ep_rew_mean     | 34.3     |
+| time/              |          |
+|    episodes        | 12       |
+|    fps             | 45       |
+|    time_elapsed    | 33       |
+|    total_timesteps | 1531     |
+| train/             |          |
+|    actor_loss      | -7.37    |
+|    critic_loss     | 1.66     |
+|    ent_coef        | 0.74     |
+|    ent_coef_loss   | -0.831   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1030     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 117      |
+|    ep_rew_mean     | 100      |
+| time/              |          |
+|    episodes        | 16       |
+|    fps             | 42       |
+|    time_elapsed    | 43       |
+|    total_timesteps | 1876     |
+| train/             |          |
+|    actor_loss      | -10.8    |
+|    critic_loss     | 9.79     |
+|    ent_coef        | 0.68     |
+|    ent_coef_loss   | -0.82    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1375     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step2000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 108      |
+|    ep_rew_mean     | 168      |
+| time/              |          |
+|    episodes        | 20       |
+|    fps             | 40       |
+|    time_elapsed    | 52       |
+|    total_timesteps | 2162     |
+| train/             |          |
+|    actor_loss      | -19.8    |
+|    critic_loss     | 17.4     |
+|    ent_coef        | 0.642    |
+|    ent_coef_loss   | -0.702   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1661     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 100      |
+|    ep_rew_mean     | 214      |
+| time/              |          |
+|    episodes        | 24       |
+|    fps             | 39       |
+|    time_elapsed    | 60       |
+|    total_timesteps | 2408     |
+| train/             |          |
+|    actor_loss      | -25.5    |
+|    critic_loss     | 49.9     |
+|    ent_coef        | 0.614    |
+|    ent_coef_loss   | -0.558   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 1907     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 97.1     |
+|    ep_rew_mean     | 280      |
+| time/              |          |
+|    episodes        | 28       |
+|    fps             | 38       |
+|    time_elapsed    | 70       |
+|    total_timesteps | 2719     |
+| train/             |          |
+|    actor_loss      | -34.6    |
+|    critic_loss     | 58.8     |
+|    ent_coef        | 0.585    |
+|    ent_coef_loss   | -0.509   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2218     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 95.4     |
+|    ep_rew_mean     | 334      |
+| time/              |          |
+|    episodes        | 32       |
+|    fps             | 37       |
+|    time_elapsed    | 80       |
+|    total_timesteps | 3053     |
+| train/             |          |
+|    actor_loss      | -43      |
+|    critic_loss     | 79.5     |
+|    ent_coef        | 0.558    |
+|    ent_coef_loss   | -0.482   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2552     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 91.1     |
+|    ep_rew_mean     | 358      |
+| time/              |          |
+|    episodes        | 36       |
+|    fps             | 37       |
+|    time_elapsed    | 87       |
+|    total_timesteps | 3278     |
+| train/             |          |
+|    actor_loss      | -52.9    |
+|    critic_loss     | 97.7     |
+|    ent_coef        | 0.544    |
+|    ent_coef_loss   | -0.244   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 2777     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 88.7     |
+|    ep_rew_mean     | 369      |
+| time/              |          |
+|    episodes        | 40       |
+|    fps             | 36       |
+|    time_elapsed    | 95       |
+|    total_timesteps | 3547     |
+| train/             |          |
+|    actor_loss      | -63      |
+|    critic_loss     | 125      |
+|    ent_coef        | 0.53     |
+|    ent_coef_loss   | -0.339   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3046     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 86.2     |
+|    ep_rew_mean     | 386      |
+| time/              |          |
+|    episodes        | 44       |
+|    fps             | 36       |
+|    time_elapsed    | 103      |
+|    total_timesteps | 3792     |
+| train/             |          |
+|    actor_loss      | -67.3    |
+|    critic_loss     | 156      |
+|    ent_coef        | 0.521    |
+|    ent_coef_loss   | -0.0394  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3291     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step4000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 84.1     |
+|    ep_rew_mean     | 400      |
+| time/              |          |
+|    episodes        | 48       |
+|    fps             | 36       |
+|    time_elapsed    | 110      |
+|    total_timesteps | 4035     |
+| train/             |          |
+|    actor_loss      | -77.2    |
+|    critic_loss     | 366      |
+|    ent_coef        | 0.515    |
+|    ent_coef_loss   | -0.133   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3534     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 82.2     |
+|    ep_rew_mean     | 410      |
+| time/              |          |
+|    episodes        | 52       |
+|    fps             | 36       |
+|    time_elapsed    | 118      |
+|    total_timesteps | 4275     |
+| train/             |          |
+|    actor_loss      | -89.9    |
+|    critic_loss     | 216      |
+|    ent_coef        | 0.513    |
+|    ent_coef_loss   | -0.13    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 3774     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 80.8     |
+|    ep_rew_mean     | 418      |
+| time/              |          |
+|    episodes        | 56       |
+|    fps             | 36       |
+|    time_elapsed    | 125      |
+|    total_timesteps | 4523     |
+| train/             |          |
+|    actor_loss      | -90.7    |
+|    critic_loss     | 150      |
+|    ent_coef        | 0.517    |
+|    ent_coef_loss   | -0.0673  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 4022     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 81.8     |
+|    ep_rew_mean     | 464      |
+| time/              |          |
+|    episodes        | 60       |
+|    fps             | 35       |
+|    time_elapsed    | 137      |
+|    total_timesteps | 4911     |
+| train/             |          |
+|    actor_loss      | -104     |
+|    critic_loss     | 208      |
+|    ent_coef        | 0.531    |
+|    ent_coef_loss   | 0.0788   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 4410     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 84       |
+|    ep_rew_mean     | 494      |
+| time/              |          |
+|    episodes        | 64       |
+|    fps             | 35       |
+|    time_elapsed    | 151      |
+|    total_timesteps | 5373     |
+| train/             |          |
+|    actor_loss      | -120     |
+|    critic_loss     | 748      |
+|    ent_coef        | 0.564    |
+|    ent_coef_loss   | 0.186    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 4872     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 83       |
+|    ep_rew_mean     | 491      |
+| time/              |          |
+|    episodes        | 68       |
+|    fps             | 35       |
+|    time_elapsed    | 160      |
+|    total_timesteps | 5643     |
+| train/             |          |
+|    actor_loss      | -138     |
+|    critic_loss     | 278      |
+|    ent_coef        | 0.591    |
+|    ent_coef_loss   | 0.224    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5142     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 82.7     |
+|    ep_rew_mean     | 496      |
+| time/              |          |
+|    episodes        | 72       |
+|    fps             | 35       |
+|    time_elapsed    | 169      |
+|    total_timesteps | 5953     |
+| train/             |          |
+|    actor_loss      | -144     |
+|    critic_loss     | 237      |
+|    ent_coef        | 0.625    |
+|    ent_coef_loss   | 0.174    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5452     |
+---------------------------------
+  [Checkpoint] Saved models/sac_drl_step6000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 82.5     |
+|    ep_rew_mean     | 516      |
+| time/              |          |
+|    episodes        | 76       |
+|    fps             | 35       |
+|    time_elapsed    | 179      |
+|    total_timesteps | 6272     |
+| train/             |          |
+|    actor_loss      | -157     |
+|    critic_loss     | 297      |
+|    ent_coef        | 0.662    |
+|    ent_coef_loss   | 0.0623   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 5771     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 83       |
+|    ep_rew_mean     | 524      |
+| time/              |          |
+|    episodes        | 80       |
+|    fps             | 35       |
+|    time_elapsed    | 189      |
+|    total_timesteps | 6637     |
+| train/             |          |
+|    actor_loss      | -167     |
+|    critic_loss     | 622      |
+|    ent_coef        | 0.707    |
+|    ent_coef_loss   | 0.0519   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 6136     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 83       |
+|    ep_rew_mean     | 539      |
+| time/              |          |
+|    episodes        | 84       |
+|    fps             | 34       |
+|    time_elapsed    | 199      |
+|    total_timesteps | 6973     |
+| train/             |          |
+|    actor_loss      | -168     |
+|    critic_loss     | 399      |
+|    ent_coef        | 0.743    |
+|    ent_coef_loss   | 0.0368   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 6472     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 82.4     |
+|    ep_rew_mean     | 533      |
+| time/              |          |
+|    episodes        | 88       |
+|    fps             | 34       |
+|    time_elapsed    | 208      |
+|    total_timesteps | 7252     |
+| train/             |          |
+|    actor_loss      | -185     |
+|    critic_loss     | 571      |
+|    ent_coef        | 0.773    |
+|    ent_coef_loss   | 0.125    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 6751     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 81.8     |
+|    ep_rew_mean     | 535      |
+| time/              |          |
+|    episodes        | 92       |
+|    fps             | 34       |
+|    time_elapsed    | 216      |
+|    total_timesteps | 7529     |
+| train/             |          |
+|    actor_loss      | -188     |
+|    critic_loss     | 603      |
+|    ent_coef        | 0.8      |
+|    ent_coef_loss   | 0.0385   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7028     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 81.5     |
+|    ep_rew_mean     | 551      |
+| time/              |          |
+|    episodes        | 96       |
+|    fps             | 34       |
+|    time_elapsed    | 225      |
+|    total_timesteps | 7821     |
+| train/             |          |
+|    actor_loss      | -201     |
+|    critic_loss     | 1.02e+03 |
+|    ent_coef        | 0.832    |
+|    ent_coef_loss   | 0.0347   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7320     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step8000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 81.9     |
+|    ep_rew_mean     | 563      |
+| time/              |          |
+|    episodes        | 100      |
+|    fps             | 34       |
+|    time_elapsed    | 236      |
+|    total_timesteps | 8186     |
+| train/             |          |
+|    actor_loss      | -205     |
+|    critic_loss     | 594      |
+|    ent_coef        | 0.868    |
+|    ent_coef_loss   | 0.00104  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7685     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 77       |
+|    ep_rew_mean     | 592      |
+| time/              |          |
+|    episodes        | 104      |
+|    fps             | 34       |
+|    time_elapsed    | 246      |
+|    total_timesteps | 8480     |
+| train/             |          |
+|    actor_loss      | -232     |
+|    critic_loss     | 659      |
+|    ent_coef        | 0.902    |
+|    ent_coef_loss   | 0.0288   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 7979     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 77.7     |
+|    ep_rew_mean     | 653      |
+| time/              |          |
+|    episodes        | 108      |
+|    fps             | 34       |
+|    time_elapsed    | 260      |
+|    total_timesteps | 8937     |
+| train/             |          |
+|    actor_loss      | -236     |
+|    critic_loss     | 823      |
+|    ent_coef        | 0.942    |
+|    ent_coef_loss   | 0.0118   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 8436     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+----------------------------------
+| rollout/           |           |
+|    ep_len_mean     | 77.2      |
+|    ep_rew_mean     | 684       |
+| time/              |           |
+|    episodes        | 112       |
+|    fps             | 34        |
+|    time_elapsed    | 269       |
+|    total_timesteps | 9249      |
+| train/             |           |
+|    actor_loss      | -228      |
+|    critic_loss     | 983       |
+|    ent_coef        | 0.99      |
+|    ent_coef_loss   | -7.32e-05 |
+|    learning_rate   | 0.0003    |
+|    n_updates       | 8748      |
+----------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 76.2     |
+|    ep_rew_mean     | 694      |
+| time/              |          |
+|    episodes        | 116      |
+|    fps             | 34       |
+|    time_elapsed    | 277      |
+|    total_timesteps | 9498     |
+| train/             |          |
+|    actor_loss      | -248     |
+|    critic_loss     | 644      |
+|    ent_coef        | 1.02     |
+|    ent_coef_loss   | 0.000985 |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 8997     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 78.2     |
+|    ep_rew_mean     | 697      |
+| time/              |          |
+|    episodes        | 120      |
+|    fps             | 34       |
+|    time_elapsed    | 293      |
+|    total_timesteps | 9979     |
+| train/             |          |
+|    actor_loss      | -244     |
+|    critic_loss     | 521      |
+|    ent_coef        | 1.08     |
+|    ent_coef_loss   | -0.0133  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 9478     |
+---------------------------------
+  [Checkpoint] Saved models/sac_drl_step10000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 80.3     |
+|    ep_rew_mean     | 740      |
+| time/              |          |
+|    episodes        | 124      |
+|    fps             | 33       |
+|    time_elapsed    | 307      |
+|    total_timesteps | 10436    |
+| train/             |          |
+|    actor_loss      | -269     |
+|    critic_loss     | 915      |
+|    ent_coef        | 1.1      |
+|    ent_coef_loss   | 0.00159  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 9935     |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 80.5     |
+|    ep_rew_mean     | 752      |
+| time/              |          |
+|    episodes        | 128      |
+|    fps             | 33       |
+|    time_elapsed    | 317      |
+|    total_timesteps | 10766    |
+| train/             |          |
+|    actor_loss      | -257     |
+|    critic_loss     | 907      |
+|    ent_coef        | 1.13     |
+|    ent_coef_loss   | -0.0217  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 10265    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 80.8     |
+|    ep_rew_mean     | 776      |
+| time/              |          |
+|    episodes        | 132      |
+|    fps             | 33       |
+|    time_elapsed    | 328      |
+|    total_timesteps | 11137    |
+| train/             |          |
+|    actor_loss      | -278     |
+|    critic_loss     | 620      |
+|    ent_coef        | 1.15     |
+|    ent_coef_loss   | -0.00314 |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 10636    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 82.5     |
+|    ep_rew_mean     | 826      |
+| time/              |          |
+|    episodes        | 136      |
+|    fps             | 33       |
+|    time_elapsed    | 340      |
+|    total_timesteps | 11532    |
+| train/             |          |
+|    actor_loss      | -284     |
+|    critic_loss     | 1.1e+03  |
+|    ent_coef        | 1.17     |
+|    ent_coef_loss   | 0.0133   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 11031    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step12000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 84.7     |
+|    ep_rew_mean     | 870      |
+| time/              |          |
+|    episodes        | 140      |
+|    fps             | 33       |
+|    time_elapsed    | 355      |
+|    total_timesteps | 12014    |
+| train/             |          |
+|    actor_loss      | -289     |
+|    critic_loss     | 775      |
+|    ent_coef        | 1.2      |
+|    ent_coef_loss   | 0.0199   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 11513    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 85.2     |
+|    ep_rew_mean     | 892      |
+| time/              |          |
+|    episodes        | 144      |
+|    fps             | 33       |
+|    time_elapsed    | 364      |
+|    total_timesteps | 12316    |
+| train/             |          |
+|    actor_loss      | -302     |
+|    critic_loss     | 1.14e+03 |
+|    ent_coef        | 1.21     |
+|    ent_coef_loss   | -0.0132  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 11815    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 86.5     |
+|    ep_rew_mean     | 913      |
+| time/              |          |
+|    episodes        | 148      |
+|    fps             | 33       |
+|    time_elapsed    | 376      |
+|    total_timesteps | 12685    |
+| train/             |          |
+|    actor_loss      | -287     |
+|    critic_loss     | 1.07e+03 |
+|    ent_coef        | 1.24     |
+|    ent_coef_loss   | -0.0276  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 12184    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 87.6     |
+|    ep_rew_mean     | 950      |
+| time/              |          |
+|    episodes        | 152      |
+|    fps             | 33       |
+|    time_elapsed    | 387      |
+|    total_timesteps | 13038    |
+| train/             |          |
+|    actor_loss      | -329     |
+|    critic_loss     | 2.05e+03 |
+|    ent_coef        | 1.27     |
+|    ent_coef_loss   | -0.0431  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 12537    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 88.5     |
+|    ep_rew_mean     | 974      |
+| time/              |          |
+|    episodes        | 156      |
+|    fps             | 33       |
+|    time_elapsed    | 397      |
+|    total_timesteps | 13376    |
+| train/             |          |
+|    actor_loss      | -316     |
+|    critic_loss     | 998      |
+|    ent_coef        | 1.31     |
+|    ent_coef_loss   | -0.0622  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 12875    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 88.5     |
+|    ep_rew_mean     | 987      |
+| time/              |          |
+|    episodes        | 160      |
+|    fps             | 33       |
+|    time_elapsed    | 408      |
+|    total_timesteps | 13760    |
+| train/             |          |
+|    actor_loss      | -342     |
+|    critic_loss     | 975      |
+|    ent_coef        | 1.33     |
+|    ent_coef_loss   | -0.0211  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 13259    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step14000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 87.1     |
+|    ep_rew_mean     | 997      |
+| time/              |          |
+|    episodes        | 164      |
+|    fps             | 33       |
+|    time_elapsed    | 418      |
+|    total_timesteps | 14083    |
+| train/             |          |
+|    actor_loss      | -323     |
+|    critic_loss     | 843      |
+|    ent_coef        | 1.36     |
+|    ent_coef_loss   | 0.051    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 13582    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 88.7     |
+|    ep_rew_mean     | 1.04e+03 |
+| time/              |          |
+|    episodes        | 168      |
+|    fps             | 33       |
+|    time_elapsed    | 431      |
+|    total_timesteps | 14512    |
+| train/             |          |
+|    actor_loss      | -339     |
+|    critic_loss     | 1.05e+03 |
+|    ent_coef        | 1.35     |
+|    ent_coef_loss   | 0.00744  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 14011    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 90.8     |
+|    ep_rew_mean     | 1.11e+03 |
+| time/              |          |
+|    episodes        | 172      |
+|    fps             | 33       |
+|    time_elapsed    | 447      |
+|    total_timesteps | 15034    |
+| train/             |          |
+|    actor_loss      | -347     |
+|    critic_loss     | 913      |
+|    ent_coef        | 1.4      |
+|    ent_coef_loss   | 0.0301   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 14533    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 91.2     |
+|    ep_rew_mean     | 1.12e+03 |
+| time/              |          |
+|    episodes        | 176      |
+|    fps             | 33       |
+|    time_elapsed    | 459      |
+|    total_timesteps | 15397    |
+| train/             |          |
+|    actor_loss      | -357     |
+|    critic_loss     | 2.13e+03 |
+|    ent_coef        | 1.4      |
+|    ent_coef_loss   | -0.0453  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 14896    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step16000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 96.8     |
+|    ep_rew_mean     | 1.13e+03 |
+| time/              |          |
+|    episodes        | 180      |
+|    fps             | 33       |
+|    time_elapsed    | 487      |
+|    total_timesteps | 16317    |
+| train/             |          |
+|    actor_loss      | -365     |
+|    critic_loss     | 1.47e+03 |
+|    ent_coef        | 1.38     |
+|    ent_coef_loss   | 0.00809  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 15816    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 97.4     |
+|    ep_rew_mean     | 1.17e+03 |
+| time/              |          |
+|    episodes        | 184      |
+|    fps             | 33       |
+|    time_elapsed    | 498      |
+|    total_timesteps | 16711    |
+| train/             |          |
+|    actor_loss      | -371     |
+|    critic_loss     | 2.7e+03  |
+|    ent_coef        | 1.39     |
+|    ent_coef_loss   | 0.037    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 16210    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 99.5     |
+|    ep_rew_mean     | 1.23e+03 |
+| time/              |          |
+|    episodes        | 188      |
+|    fps             | 33       |
+|    time_elapsed    | 513      |
+|    total_timesteps | 17205    |
+| train/             |          |
+|    actor_loss      | -372     |
+|    critic_loss     | 1.19e+03 |
+|    ent_coef        | 1.43     |
+|    ent_coef_loss   | -0.0204  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 16704    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 101      |
+|    ep_rew_mean     | 1.26e+03 |
+| time/              |          |
+|    episodes        | 192      |
+|    fps             | 33       |
+|    time_elapsed    | 526      |
+|    total_timesteps | 17627    |
+| train/             |          |
+|    actor_loss      | -398     |
+|    critic_loss     | 1.75e+03 |
+|    ent_coef        | 1.5      |
+|    ent_coef_loss   | 0.0804   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 17126    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 102      |
+|    ep_rew_mean     | 1.27e+03 |
+| time/              |          |
+|    episodes        | 196      |
+|    fps             | 33       |
+|    time_elapsed    | 537      |
+|    total_timesteps | 17986    |
+| train/             |          |
+|    actor_loss      | -371     |
+|    critic_loss     | 1.5e+03  |
+|    ent_coef        | 1.53     |
+|    ent_coef_loss   | -0.00391 |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 17485    |
+---------------------------------
+  [Checkpoint] Saved models/sac_drl_step18000
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 101      |
+|    ep_rew_mean     | 1.27e+03 |
+| time/              |          |
+|    episodes        | 200      |
+|    fps             | 33       |
+|    time_elapsed    | 545      |
+|    total_timesteps | 18258    |
+| train/             |          |
+|    actor_loss      | -398     |
+|    critic_loss     | 1.86e+03 |
+|    ent_coef        | 1.58     |
+|    ent_coef_loss   | -0.0135  |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 17757    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 103      |
+|    ep_rew_mean     | 1.32e+03 |
+| time/              |          |
+|    episodes        | 204      |
+|    fps             | 33       |
+|    time_elapsed    | 562      |
+|    total_timesteps | 18803    |
+| train/             |          |
+|    actor_loss      | -383     |
+|    critic_loss     | 750      |
+|    ent_coef        | 1.61     |
+|    ent_coef_loss   | -0.042   |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 18302    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 103      |
+|    ep_rew_mean     | 1.31e+03 |
+| time/              |          |
+|    episodes        | 208      |
+|    fps             | 33       |
+|    time_elapsed    | 574      |
+|    total_timesteps | 19189    |
+| train/             |          |
+|    actor_loss      | -382     |
+|    critic_loss     | 2.05e+03 |
+|    ent_coef        | 1.63     |
+|    ent_coef_loss   | 0.123    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 18688    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 103      |
+|    ep_rew_mean     | 1.31e+03 |
+| time/              |          |
+|    episodes        | 212      |
+|    fps             | 33       |
+|    time_elapsed    | 585      |
+|    total_timesteps | 19582    |
+| train/             |          |
+|    actor_loss      | -397     |
+|    critic_loss     | 1.94e+03 |
+|    ent_coef        | 1.65     |
+|    ent_coef_loss   | 0.061    |
+|    learning_rate   | 0.0003   |
+|    n_updates       | 19081    |
+---------------------------------
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+DEBUG: Trying to spawn ego vehicle...
+DEBUG: Ticking world 10 times to settle...
+DEBUG: Agent spawned, returning initial state.
+  [Checkpoint] Saved models/sac_drl_step20000
+=== DRL DONE ===

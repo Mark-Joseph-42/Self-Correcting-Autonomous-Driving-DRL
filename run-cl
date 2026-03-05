@@ -14,7 +14,7 @@ CARLA_PATH="/workspace/carla_0.9.13/CarlaUE4.sh"
 PYTHON="/workspace/venv/bin/python"
 
 # Check for available models (stage final or intermediate checkpoints)
-MODEL_PATH="models/sac_cl_stage1.zip"
+MODEL_PATH="models/sac_cl_final.zip"
 if [ ! -f "$MODEL_PATH" ]; then
     echo "Stage 1 final model not found, searching for checkpoints..."
     # Look for the latest step checkpoint
