@@ -1,0 +1,16 @@
+# CARLA SAC Optimization Gitignore
+venv/
+miniconda/
+carla_0.9.13/
+__pycache__/
+*.pyc
+
+# Heavy training artifacts (keep code and final results)
+models/*.zip
+logs/*.csv
+training.log
+
+# IDE / System
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,42 @@
+#!/bin/bash
+# Launch CARLA + Curriculum Learning demo agent
+set -e
+
+# Use a clean display for the demo
+export DISPLAY=${DISPLAY:-:20}
+
+# Kill only existing demo processes on port 3000 to avoid stopping background training on port 2000
+fuser -k 3000/tcp 2>/dev/null || true
+fuser -k 9000/tcp 2>/dev/null || true
+sleep 2
+
+CARLA_PATH="/workspace/carla_0.9.13/CarlaUE4.sh"
+PYTHON="/workspace/venv/bin/python"
+
+# Check for available models (stage final or intermediate checkpoints)
+MODEL_PATH="models/sac_cl_stage1.zip"
+if [ ! -f "$MODEL_PATH" ]; then
+    echo "Stage 1 final model not found, searching for checkpoints..."
+    # Look for the latest step checkpoint
+    LATEST_CHECKPOINT=$(ls -v models/sac_cl_step*.zip 2>/dev/null | tail -n 1)
+    if [ -n "$LATEST_CHECKPOINT" ]; then
+        MODEL_PATH="$LATEST_CHECKPOINT"
+        echo "Using latest checkpoint: $MODEL_PATH"
+    else
+        echo "Error: No CL models or checkpoints found. Please wait for at least 2000 training steps."
+        exit 1
+    fi
+fi
+
+# Extract basename without .zip
+MODEL_NAME=$(basename "$MODEL_PATH" .zip)
+
+export PYTHONPATH="/workspace:/workspace/carla_0.9.13/PythonAPI/carla/dist/carla-0.9.13-py3.7-linux-x86_64.egg"
+
+echo "Launching CARLA in visual mode on DISPLAY=$DISPLAY and Port 3000..."
+$CARLA_PATH -nosound -opengl -world-port=3000 > /tmp/carla_demo_server.log 2>&1 &
+echo "Waiting for CARLA to be ready..."
+sleep 15
+
+echo "Starting Curriculum Learning Agent with model $MODEL_NAME..."
+$PYTHON /workspace/run-cl.py --model "$MODEL_NAME" --stage 1 --port 3000
