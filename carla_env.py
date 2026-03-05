@@ -23,7 +23,7 @@ class CarlaEnv(gym.Env):
     """
     metadata = {'render.modes': ['human']}
 
-    def __init__(self, host='127.0.0.1', port=2000, stage=1, no_render=True, tm_port=8000):
+    def __init__(self, host='127.0.0.1', port=2000, stage=1, no_render=True, tm_port=8000, map_name=None):
         super(CarlaEnv, self).__init__()
         
         # Parameters
@@ -35,6 +35,7 @@ class CarlaEnv(gym.Env):
         self.dt = 0.1  # 10 FPS for more stable physics simulation
         self.no_render = no_render
         self.tm_port = tm_port
+        self.map_name = map_name
         
         # Action space: [steering, accel]
         # Steering: [-1, 1], Accel: [-1, 1] (positive is throttle, negative is brake)
@@ -74,10 +75,11 @@ class CarlaEnv(gym.Env):
         self._init_world()
         
     def _init_world(self):
-        target_map = 'Town01' if self.stage == 1 else 'Town03'
+        target_map = self.map_name if self.map_name else ('Town01' if self.stage == 1 else 'Town03')
         try:
             self.world = self.client.get_world()
-            if not self.world.get_map().name.endswith(target_map):
+            current_map = self.world.get_map().name.split('/')[-1]
+            if current_map != target_map:
                 print(f"Loading map {target_map}...")
                 self.world = self.client.load_world(target_map)
         except Exception as e:
@@ -91,13 +93,27 @@ class CarlaEnv(gym.Env):
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = self.dt
         settings.substepping = True
-        settings.max_substep_delta_seconds = 0.01 
+        settings.max_substep_delta_seconds = 0.05 # Optimization: 10 sub-steps -> 2 sub-steps per 0.1s tick
         settings.max_substeps = 10
         settings.no_rendering_mode = self.no_render
         self.world.apply_settings(settings)
         
-        tm = self.client.get_trafficmanager(self.tm_port)
-        tm.set_synchronous_mode(True)
+        # Defensive Traffic Manager initialization
+        tm_success = False
+        for i in range(5):
+            try:
+                tm = self.client.get_trafficmanager(self.tm_port + i)
+                tm.set_synchronous_mode(True)
+                self.tm_port = self.tm_port + i # Update to the successful port
+                tm_success = True
+                break
+            except RuntimeError as e:
+                print(f"TM bind error on port {self.tm_port + i}, retrying next port...")
+                time.sleep(1)
+        
+        if not tm_success:
+            print("CRITICAL: Failed to initialize Traffic Manager after 5 attempts.")
+            sys.exit(1)
         
         # Set all traffic lights to green
         for tl in self.world.get_actors().filter('traffic.traffic_light'):

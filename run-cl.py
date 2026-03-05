@@ -11,6 +11,7 @@ def run_demo():
     parser.add_argument("--model", type=str, default="sac_cl_stage1", help="Model name in models/ (without .zip)")
     parser.add_argument("--stage", type=int, default=1, help="Curriculum stage to run (1-3)")
     parser.add_argument("--port", type=int, default=2000, help="CARLA port")
+    parser.add_argument("--map", type=str, default=None, help="Force a specific CARLA map (e.g. Town01)")
     args = parser.parse_args()
 
     # Build model path correctly
@@ -26,7 +27,7 @@ def run_demo():
 
     # Initialize environment in visual mode with custom ports
     tm_port = args.port + 1000  # e.g. 3000 -> 4000
-    env = CarlaEnv(port=args.port, stage=args.stage, no_render=False, tm_port=tm_port)
+    env = CarlaEnv(port=args.port, stage=args.stage, no_render=False, tm_port=tm_port, map_name=args.map)
     
     # Load the SAC model
     try:
